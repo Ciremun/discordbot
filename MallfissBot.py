@@ -134,9 +134,8 @@ nocolors - delete all color roles```""")
                 channel_info['game'] = 'nothing xd'
             embed = get_stream_discord_embed(channel_info)
             await message.channel.send(
-                f'{notify_twitcher_username} is live '
-                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])} '
-                f'https://www.twitch.tv/{notify_twitcher_username}',
+                f'https://www.twitch.tv/{notify_twitcher_username} is live '
+                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                 embed=embed)
 
     elif messagesplit[0] == '!connect' and message_string != '!connect' and user_is_mod(message):
@@ -361,9 +360,8 @@ class AsyncioLoop:
                 channel = client.get_channel(channel_id)
                 asyncio.run_coroutine_threadsafe(
                     channel.send(
-                        f'{username} is live '
-                        f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])} '
-                        f'https://www.twitch.tv/{notify_twitcher_username}',
+                        f'https://www.twitch.tv/{notify_twitcher_username} is live '
+                        f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                         embed=embed), client.loop)
                 self.notification_sent = True
         await asyncio.sleep(self.sleep_time)
