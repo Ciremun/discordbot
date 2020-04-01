@@ -12,8 +12,8 @@ from math import floor
 from datetime import datetime
 import time
 
-TOKEN, client_id = [line.split(' ')[1].rstrip() for line in
-                    open('tokens')]  # reading tokens from "tokens" file, local dir
+TOKEN, client_id = [line.split(' ')[1].rstrip() for line in open('tokens')]
+# reading tokens from "tokens" file, local dir
 client = discord.Client()
 hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
 hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
