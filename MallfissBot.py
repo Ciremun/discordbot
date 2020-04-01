@@ -67,6 +67,11 @@ def convert_utc_to_epoch(utc_time: str) -> float:
 
 
 def get_random_guild_emote(guild_id: int):
+    """
+    get random discord server emote as a dictionary
+    :param guild_id: discord guild id to fetch emotes
+    :return: dict
+    """
     guild_emotes_list = [{'name': x.name,
                           'id': x.id} for x in client.get_guild(guild_id).emojis if not x.animated and x.available]
     if guild_emotes_list:
