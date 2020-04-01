@@ -29,7 +29,7 @@ notify_twitcher_username = 'mallfiss_'
 def get_stream_discord_embed(channel_info: dict):
     """
     get discord.Embed for stream notification
-    :param channel_info: get_stream request dictionary
+    :param channel_info: twitch api get_streams data dictionary
     :return: discord.Embed
     """
     embed = discord.Embed(title=f'{channel_info["title"]}',
@@ -360,7 +360,7 @@ class AsyncioLoop:
                 channel = client.get_channel(channel_id)
                 asyncio.run_coroutine_threadsafe(
                     channel.send(
-                        f'https://www.twitch.tv/{notify_twitcher_username} is live '
+                        f'https://www.twitch.tv/{username} is live '
                         f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                         embed=embed), client.loop)
                 self.notification_sent = True
