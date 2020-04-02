@@ -25,7 +25,7 @@ bot_channel_ids, notify_channel_ids, modlist = [], [], []
 notify_enabled = True
 notify_twitcher_username = 'mallfiss_'
 discord_guild_id = 692557289982394418
-stream_discord_embed_hex6 = "#ffaaff"
+stream_discord_embed_hex6 = "#00BFFF"
 
 
 def get_stream_discord_embed(channel_info: dict):
