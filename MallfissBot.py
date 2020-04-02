@@ -26,6 +26,7 @@ notify_enabled = True
 notify_twitcher_username = 'mallfiss_'
 discord_guild_id = 692557289982394418
 stream_discord_embed_hex6 = "#00BFFF"
+prefix = '!'
 
 
 def get_stream_discord_embed(channel_info: dict):
@@ -101,16 +102,177 @@ def user_is_mod(message):
     return bool(any(message.author.id == i for i in modlist))
 
 
-@client.event
-async def on_message(message):
-    if message.author == client.user or not any(message.channel.id == i for i in bot_channel_ids):
-        return
-
-    message_string = message.content
-    messagesplit = message_string.split()
-    if message_string == '!help':
+async def ttv_command(message):
+    channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={notify_twitcher_username}",
+                                headers={"Client-ID": f'{client_id}'}).json()['data']
+    if not channel_info or channel_info[0]['type'] != 'live':
+        await message.channel.send(f'{notify_twitcher_username} is offline')
+    else:
+        channel_info = channel_info[0]
+        try:
+            channel_info['game'] = requests.get(f"https://api.twitch.tv/helix/games?id={channel_info['game_id']}",
+                                                headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
+        except IndexError:
+            channel_info['game'] = 'nothing xd'
+        embed = get_stream_discord_embed(channel_info)
         await message.channel.send(
-            f"""```css
+            f'https://www.twitch.tv/{notify_twitcher_username} is live '
+            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+            embed=embed)
+
+
+async def connect_command(message):
+    if not user_is_mod(message):
+        return
+    await connect_disconnect_command(message, db.connect_channel, True, ['already listening', 'added to'],
+                                     bot_channel_ids.append)
+
+
+async def disconnect_command(message):
+    if not user_is_mod(message):
+        return
+    await connect_disconnect_command(message, db.disconnect_channel, False, ['not connected', 'removed from'],
+                                     bot_channel_ids.remove)
+
+
+async def connect_disconnect_command(message, db_call, if_param, response_list, bot_channel_ids_act):
+    try:
+        messagesplit = message.content.split()
+        target_channel = int(messagesplit[1])
+        if db.get_channel_by_id(target_channel) == if_param:
+            await message.channel.send(f'{message.author.mention}, {response_list[0]} to {messagesplit[1]}')
+            return
+        db_call(target_channel)
+        bot_channel_ids_act(target_channel)
+        channel_object = client.get_channel(target_channel)
+        await message.channel.send(
+            f'{message.author.mention}, {channel_object.guild} - #{channel_object.name} successfully '
+            f'{response_list[1]} listen')
+    except ValueError:
+        await message.channel.send(f'{message.author.mention}, error converting to int')
+    except IndexError:
+        await message.channel.send(f'{message.author.mention}, no channel_id!')
+
+
+async def connections_command(message):
+    if not user_is_mod(message):
+        return
+    result = [i[0] for i in db.get_channels()]
+    response = [f'{channel.guild} - #{channel.name}\n' for channel in
+                [client.get_channel(channel_id) for channel_id in result]]
+    await message.channel.send(f"""```css\n{''.join(response)}```""")
+
+
+async def colorinfo_command(message):
+    messagesplit = message.content.split()
+    color_code = ' '.join(messagesplit[1:])
+    if not color_code:
+        await message.channel.send(f'{message.author.mention}, no color! usage: colorinfo <#hex or rgb>')
+        return
+    if not re.match(rgb_hex_regex, color_code):
+        await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
+                                   f'245, 66, 242')
+        return
+    if re.match(rgb_regex, color_code):
+        try:
+            r, g, b = [int(i.strip(',')) for i in color_code.split()]
+            color_code = rgb_to_hex(r, g, b)
+        except ValueError:
+            await message.channel.send(f'{message.author.mention}, rgb example: 245, 66, 242')
+            return
+    elif re.match(hex3_color_regex, color_code):
+        color_code = hex3_to_hex6(color_code)
+    color_img = Image.new("RGB", (100, 100), color_code)
+    with io.BytesIO() as image_binary:
+        color_img.save(image_binary, 'PNG')
+        image_binary.seek(0)
+        await message.channel.send(f'color: rgb{hex_to_rgb(color_code)}, {color_code}',
+                                   file=discord.File(fp=image_binary, filename='image.png'))
+
+
+async def nocolors_command(message):
+    if not user_is_mod(message):
+        return
+    for role in message.guild.roles:
+        if re.match(hex_color_regex, role.name):
+            await role.delete()
+
+
+async def nocolor_command(message):
+    for role in message.author.roles:
+        if re.match(hex_color_regex, role.name):
+            await message.author.remove_roles(role)
+            return
+    await message.channel.send(f'{message.author.mention}, you have no color role')
+
+
+async def color_command(message):
+    messagesplit = message.content.split()
+    color_code = ' '.join(messagesplit[1:])
+    if not color_code:
+        for role in message.author.roles:
+            if re.match(hex_color_regex, role.name):
+                await message.channel.send(f'{message.author.mention}, your current color is {role.mention}')
+                return
+        await message.channel.send(f'{message.author.mention}, you have no color role')
+        return
+    if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > color_roles_limit:
+        await message.channel.send(
+            f'{message.author.mention}, color roles limit reached, created color roles - !colors')
+        return
+    elif not re.match(rgb_hex_regex, color_code):
+        await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
+                                   f'245, 66, 242')
+        return
+    if re.match(rgb_regex, color_code):
+        try:
+            r, g, b = [int(i.strip(',')) for i in color_code.split()]
+            color_code = rgb_to_hex(r, g, b)
+        except ValueError:
+            await message.channel.send(f'{message.author.mention}, rgb example: 245, 66, 242')
+            return
+    elif re.match(hex3_color_regex, color_code):
+        color_code = hex3_to_hex6(color_code)
+    if any(role.name == color_code.lower() for role in message.author.roles):
+        await message.channel.send(
+            f'{message.author.mention}, you already have '
+            f'{discord.utils.get(message.guild.roles, name=color_code.lower()).mention} '
+            f' color')
+    else:
+        for i in message.guild.roles:
+            if i.name == color_code:
+                for role in message.author.roles:
+                    if re.match(hex_color_regex, role.name):
+                        await message.author.remove_roles(role)
+                        break
+                await message.author.add_roles(i)
+                return
+        for role in message.author.roles:
+            if re.match(hex_color_regex, role.name):
+                await message.author.remove_roles(role)
+                break
+        new_role = await message.guild.create_role(name=color_code.lower(),
+                                                   colour=discord.Colour(int(color_code[1:], 16)))
+        await message.author.add_roles(new_role)
+
+
+async def colors_command(message):
+    colors_list = [role.mention for role in message.guild.roles if re.match(hex_color_regex, role.name)]
+    if not colors_list:
+        await message.channel.send(f'{message.author.mention}, no colors available')
+        return
+    await message.channel.send(f'created color roles - {", ".join(colors_list)}')
+
+
+async def exit_command(message):
+    if not user_is_mod(message):
+        return
+    os._exit(0)
+
+
+async def help_command(message):
+    await message.channel.send(
+        f"""```css
 prefix=!
 commands:
 colorinfo <#hex or spaced rgb color> - get color image
@@ -122,154 +284,34 @@ mod_commands:
 connect, disconnect, connections
 nocolors - delete all color roles```""")
 
-    elif message_string == '!ttv':
-        channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={notify_twitcher_username}",
-                                    headers={"Client-ID": f'{client_id}'}).json()['data']
-        if not channel_info or channel_info[0]['type'] != 'live':
-            await message.channel.send(f'{notify_twitcher_username} is offline')
-        else:
-            channel_info = channel_info[0]
-            try:
-                channel_info['game'] = requests.get(f"https://api.twitch.tv/helix/games?id={channel_info['game_id']}",
-                                                    headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
-            except IndexError:
-                channel_info['game'] = 'nothing xd'
-            embed = get_stream_discord_embed(channel_info)
-            await message.channel.send(
-                f'https://www.twitch.tv/{notify_twitcher_username} is live '
-                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                embed=embed)
 
-    elif messagesplit[0] == '!connect' and message_string != '!connect' and user_is_mod(message):
-        try:
-            channel_to_connect = int(messagesplit[1])
-            if db.get_channel_by_id(channel_to_connect):
-                await message.channel.send(f'{message.author.mention}, already listening to {messagesplit[1]}')
-                return
-            db.connect_channel(channel_to_connect)
-            bot_channel_ids.append(channel_to_connect)
-            connected_channel = client.get_channel(channel_to_connect)
-            await message.channel.send(
-                f'{message.author.mention}, {connected_channel.guild} - #{connected_channel.name} successfully '
-                f'added to listen')
-        except ValueError:
-            await message.channel.send(f'{message.author.mention}, error converting to int')
+commands_dict = {
+    'help': help_command,
+    'ttv': ttv_command,
+    'color': color_command,
+    'colors': colors_command,
+    'nocolor': nocolor_command,
+    'nocolors': nocolors_command,
+    'connections': connections_command,
+    'connect': connect_command,
+    'disconnect': disconnect_command,
+    'exit': exit_command,
+    'colorinfo': colorinfo_command
+}
+
+
+@client.event
+async def on_message(message):
+    if message.author == client.user or not any(message.channel.id == i for i in bot_channel_ids):
+        return
+
+    messagesplit = message.content.split()
+
+    if message.content.startswith(prefix):
+        command = commands_dict.get(messagesplit[0][1:], None)
+        if command is None:
             return
-    elif messagesplit[0] == '!disconnect' and message_string != '!disconnect' and user_is_mod(message):
-        try:
-            channel_to_disconnect = int(messagesplit[1])
-            if not db.get_channel_by_id(channel_to_disconnect):
-                await message.channel.send(f'{message.author.mention}, not connected to {messagesplit[1]}')
-                return
-            db.disconnect_channel(channel_to_disconnect)
-            bot_channel_ids.remove(channel_to_disconnect)
-            disconnected_channel = client.get_channel(channel_to_disconnect)
-            await message.channel.send(
-                f'{message.author.mention}, {disconnected_channel.guild} - #{disconnected_channel.name} successfully '
-                f'removed from listen')
-        except ValueError:
-            await message.channel.send(f'{message.author.mention}, error converting to int')
-            return
-
-    elif messagesplit[0] == '!connections' and user_is_mod(message):
-        result = [i[0] for i in db.get_channels()]
-        response = [f'{channel.guild} - #{channel.name}\n' for channel in
-                    [client.get_channel(channel_id) for channel_id in result]]
-        await message.channel.send(f"""```css\n{''.join(response)}```""")
-
-    elif messagesplit[0] == '!colorinfo' and message_string != '!colorinfo':
-        color_code = ' '.join(messagesplit[1:])
-        if not re.match(rgb_hex_regex, color_code):
-            await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
-                                       f'245, 66, 242')
-            return
-        if re.match(rgb_regex, color_code):
-            try:
-                r, g, b = [int(i.strip(',')) for i in color_code.split()]
-                color_code = rgb_to_hex(r, g, b)
-            except ValueError:
-                await message.channel.send(f'{message.author.mention}, rgb example: 245, 66, 242')
-                return
-        elif re.match(hex3_color_regex, color_code):
-            color_code = hex3_to_hex6(color_code)
-        color_img = Image.new("RGB", (100, 100), color_code)
-        with io.BytesIO() as image_binary:
-            color_img.save(image_binary, 'PNG')
-            image_binary.seek(0)
-            await message.channel.send(f'color: rgb{hex_to_rgb(color_code)}, {color_code}',
-                                       file=discord.File(fp=image_binary, filename='image.png'))
-
-    elif message_string == '!nocolors' and user_is_mod(message):
-        for role in message.guild.roles:
-            if re.match(hex_color_regex, role.name):
-                await role.delete()
-
-    elif message_string == '!nocolor':
-        for role in message.author.roles:
-            if re.match(hex_color_regex, role.name):
-                await message.author.remove_roles(role)
-                return
-        await message.channel.send(f'{message.author.mention}, you have no color role')
-
-    elif messagesplit[0] == '!color':
-        try:
-            color_code = ' '.join(messagesplit[1:])
-            if not color_code:
-                raise IndexError
-            if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > color_roles_limit:
-                await message.channel.send(
-                    f'{message.author.mention}, color roles limit reached, created color roles - !colors')
-                return
-            elif not re.match(rgb_hex_regex, color_code):
-                await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
-                                           f'245, 66, 242')
-                return
-            if re.match(rgb_regex, color_code):
-                try:
-                    r, g, b = [int(i.strip(',')) for i in color_code.split()]
-                    color_code = rgb_to_hex(r, g, b)
-                except ValueError:
-                    await message.channel.send(f'{message.author.mention}, rgb example: 245, 66, 242')
-                    return
-            elif re.match(hex3_color_regex, color_code):
-                color_code = hex3_to_hex6(color_code)
-            if any(role.name == color_code.lower() for role in message.author.roles):
-                await message.channel.send(
-                    f'{message.author.mention}, you already have '
-                    f'{discord.utils.get(message.guild.roles, name=color_code.lower()).mention} '
-                    f' color')
-            else:
-                for i in message.guild.roles:
-                    if i.name == color_code:
-                        for role in message.author.roles:
-                            if re.match(hex_color_regex, role.name):
-                                await message.author.remove_roles(role)
-                                break
-                        await message.author.add_roles(i)
-                        return
-                for role in message.author.roles:
-                    if re.match(hex_color_regex, role.name):
-                        await message.author.remove_roles(role)
-                        break
-                new_role = await message.guild.create_role(name=color_code.lower(),
-                                                           colour=discord.Colour(int(color_code[1:], 16)))
-                await message.author.add_roles(new_role)
-        except IndexError:
-            for role in message.author.roles:
-                if re.match(hex_color_regex, role.name):
-                    await message.channel.send(f'{message.author.mention}, your current color is {role.mention}')
-                    return
-            await message.channel.send(f'{message.author.mention}, you have no color role')
-
-    elif message_string == '!colors':
-        colors_list = [role.mention for role in message.guild.roles if re.match(hex_color_regex, role.name)]
-        if not colors_list:
-            await message.channel.send(f'{message.author.mention}, no colors available')
-            return
-        await message.channel.send(f'created color roles - {", ".join(colors_list)}')
-
-    elif message_string.startswith('!exit') and user_is_mod(message):
-        os._exit(0)
+        await command(message)
 
 
 @client.event
