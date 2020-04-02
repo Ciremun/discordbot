@@ -26,9 +26,8 @@ twitch_app_client_id <client_id_here>
 
 ### database
 
-using db/db_query.py add channel and user ids  
+using db/db_query.py add channel and mod ids  
 
-insert channel_id, notify_channel_id, mod user_id:  
 
 ```
 insert into channels (channel_id) values (<channel_id_here>)
