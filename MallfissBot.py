@@ -367,7 +367,7 @@ class AsyncioLoop:
                 channel = client.get_channel(channel_id)
                 asyncio.run_coroutine_threadsafe(
                     channel.send(
-                        f'https://www.twitch.tv/{username} is live '
+                        f'@everyone https://www.twitch.tv/{username} is live '
                         f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                         embed=embed), client.loop)
                 self.notification_sent = True
