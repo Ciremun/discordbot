@@ -24,6 +24,8 @@ modlist = [353223800692670464, 199406903195992064]  # discord user ids for bot m
 bot_channel_ids, notify_channel_ids = [], []  # discord channel ids to listen and send stream notify, edit via db_query
 notify_enabled = True
 notify_twitcher_username = 'mallfiss_'
+discord_guild_id = 692557289982394418
+stream_discord_embed_hex6 = "#ffaaff"
 
 
 def get_stream_discord_embed(channel_info: dict):
@@ -33,13 +35,13 @@ def get_stream_discord_embed(channel_info: dict):
     :return: discord.Embed
     """
     embed = discord.Embed(title=f'{channel_info["title"]}',
-                          url=f'https://twitch.tv/{channel_info["user_name"]}', color=int(
-            f'{discord.utils.get(client.get_guild(692557289982394418).roles, id=692568304375824414).color}'[1:], 16))
+                          url=f'https://twitch.tv/{channel_info["user_name"]}', color=int(stream_discord_embed_hex6[1:],
+                                                                                          16))
     embed.add_field(name='Playing', value=f'{channel_info["game"]}')
     embed.add_field(name='Stream started',
                     value=f'{seconds_convert(time.time() - convert_utc_to_epoch(channel_info["started_at"]))} ago')
     embed.set_footer(text='hehe xd')
-    random_emote_id = get_random_guild_emote(692557289982394418).get("id", None)
+    random_emote_id = get_random_guild_emote(discord_guild_id).get("id", None)
     if random_emote_id:
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{random_emote_id}.png')
     return embed
