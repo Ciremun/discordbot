@@ -62,6 +62,6 @@ stream_discord_embed_hex6(hex6 color str) - stream notification embed line color
 prefix(str) - chat command prefix  
 
 ## commands
-prefix = !  
+
 everyone: color, nocolor, colorinfo, colors, ttv, help  
 bot moderators: connect, disconnect, connections, nocolors, exit  
