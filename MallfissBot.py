@@ -170,8 +170,7 @@ async def colorinfo_command(message):
         await message.channel.send(f'{message.author.mention}, no color! usage: colorinfo <#hex or rgb>')
         return
     if not re.match(rgb_hex_regex, color_code):
-        await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
-                                   f'245, 66, 242')
+        await message.channel.send(f'{message.author.mention}, color: #hex or rgb, example: #f542f2 or 245, 66, 242')
         return
     if re.match(rgb_regex, color_code):
         try:
@@ -221,8 +220,7 @@ async def color_command(message):
             f'{message.author.mention}, color roles limit reached, created color roles - !colors')
         return
     elif not re.match(rgb_hex_regex, color_code):
-        await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
-                                   f'245, 66, 242')
+        await message.channel.send(f'{message.author.mention}, color: #hex or rgb, example: #f542f2 or 245, 66, 242')
         return
     if re.match(rgb_regex, color_code):
         try:
@@ -275,9 +273,9 @@ async def help_command(message):
         f"""```css
 prefix=!
 commands:
-colorinfo <#hex or spaced rgb color> - get color image
+colorinfo <#hex or rgb> - get color image
 nocolor - remove color role
-color <#hex or spaced rgb color> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
+color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
 colors - list created color roles
 ttv - check if live on twitch
 mod_commands:
