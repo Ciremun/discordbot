@@ -20,8 +20,8 @@ hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
 rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 color_roles_limit = 50
-modlist = [353223800692670464, 199406903195992064]  # discord user ids for bot mod commands
-bot_channel_ids, notify_channel_ids = [], []  # discord channel ids to listen and send stream notify, edit via db_query
+bot_channel_ids, notify_channel_ids, modlist = [], [], []
+# discord channel ids to listen and send stream notify, discord user ids for bot mod commands, edit via db_query
 notify_enabled = True
 notify_twitcher_username = 'mallfiss_'
 discord_guild_id = 692557289982394418
@@ -292,11 +292,12 @@ async def on_ready():
 class ThreadDB:
 
     def __init__(self):
-        global bot_channel_ids, notify_channel_ids
+        global bot_channel_ids, notify_channel_ids, modlist
         self.conn = sqlite3.connect('db/discord_data.db')
         self.c = self.conn.cursor()
         bot_channel_ids = [i[0] for i in self.get_channels()]
         notify_channel_ids = [i[0] for i in self.get_notify_channels()]
+        modlist = [i[0] for i in self.get_modlist()]
 
     def connect_channel(self, channel_id: int):
         with self.conn:
@@ -316,6 +317,10 @@ class ThreadDB:
 
     def get_notify_channels(self):
         self.c.execute('SELECT notify_channel_id FROM notify')
+        return self.c.fetchall()
+
+    def get_modlist(self):
+        self.c.execute('SELECT user_id FROM modlist')
         return self.c.fetchall()
 
 
