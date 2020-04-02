@@ -54,3 +54,8 @@ notify_enabled(bool)
 notify_twitcher_username(str) - twitch username to check  
 discord_guild_id(int) - discord server to get random emote link  
 stream_discord_embed_hex6(hex6 color str) - stream notification embed line color  
+
+## commands
+prefix = !  
+everyone: color, nocolor, getcolor, colors, ttv, help  
+bot moderators: connect, disconnect, connections, nocolors, exit  
