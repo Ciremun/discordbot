@@ -62,5 +62,5 @@ stream_discord_embed_hex6(hex6 color str) - stream notification embed line color
 
 ## commands
 prefix = !  
-everyone: color, nocolor, getcolor, colors, ttv, help  
+everyone: color, nocolor, colorinfo, colors, ttv, help  
 bot moderators: connect, disconnect, connections, nocolors, exit  

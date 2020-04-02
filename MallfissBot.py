@@ -113,7 +113,7 @@ async def on_message(message):
             f"""```css
 prefix=!
 commands:
-getcolor <#hex or spaced rgb color> - get color image
+colorinfo <#hex or spaced rgb color> - get color image
 nocolor - remove color role
 color <#hex or spaced rgb color> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
 colors - list created color roles
@@ -177,7 +177,7 @@ nocolors - delete all color roles```""")
                     [client.get_channel(channel_id) for channel_id in result]]
         await message.channel.send(f"""```css\n{''.join(response)}```""")
 
-    elif messagesplit[0] == '!getcolor' and message_string != '!getcolor':
+    elif messagesplit[0] == '!colorinfo' and message_string != '!colorinfo':
         color_code = ' '.join(messagesplit[1:])
         if not re.match(rgb_hex_regex, color_code):
             await message.channel.send(f'{message.author.mention}, color: #hex or spaced rgb, example: #f542f2 or '
