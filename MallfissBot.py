@@ -271,7 +271,7 @@ async def exit_command(message):
 async def help_command(message):
     await message.channel.send(
         f"""```css
-prefix=!
+prefix={prefix}
 commands:
 colorinfo <#hex or rgb> - get color image
 nocolor - remove color role
