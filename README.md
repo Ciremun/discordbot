@@ -26,8 +26,13 @@ twitch_app_client_id <client_id_here>
 
 ### database
 
-using db/db_query.py add channel and mod ids  
+using db/db_query.py clear all tables then add channel and mod ids  
 
+```
+delete from channels
+delete from notify
+delete from modlist
+```
 
 ```
 insert into channels (channel_id) values (<channel_id_here>)
