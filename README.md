@@ -46,3 +46,10 @@ table columns info:
 ```
 pragma table_info(<table_name_here>)
 ```
+
+## global variables
+
+notify_enabled(bool)  
+notify_twitcher_username(str) - twitch username to check  
+discord_guild_id(int) - discord server to get random emote link  
+stream_discord_embed_hex6(hex6 color str) - stream notification embed line color  
