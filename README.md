@@ -49,6 +49,7 @@ pragma table_info(<table_name_here>)
 
 ## global variables
 
+color_roles_limit(int)  
 notify_enabled(bool)  
 notify_twitcher_username(str) - twitch username to check  
 discord_guild_id(int) - discord server to get random emote link  
