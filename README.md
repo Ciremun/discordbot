@@ -20,6 +20,8 @@ requests>=2.23.0
 run `token_setup.py` to add discord bot token, twitch app client id,  
 channel ids for bot and stream notify, user ids for bot moderators  
 
+use `db/db_query.py` to execute sql queries  
+
 ## global variables
 
 color_roles_limit(int)  
