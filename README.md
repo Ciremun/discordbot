@@ -18,7 +18,7 @@ requests>=2.23.0
 ### tokens, channel/user ids
 
 run `token_setup.py` to add discord bot token, twitch app client id,  
-channel ids for bot and stream notify channels, user ids for bot moderators  
+channel ids for bot and stream notify, user ids for bot moderators  
 
 ## global variables
 
