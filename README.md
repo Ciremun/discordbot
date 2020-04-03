@@ -15,42 +15,10 @@ Pillow>=7.0.0
 requests>=2.23.0  
 ```
 
-### tokens
+### tokens, channel/user ids
 
-"tokens" file, .py file directory
-
-```
-discord_token <token_here>
-twitch_app_client_id <client_id_here>
-```
-
-### database
-
-using db/db_query.py clear all tables then add channel and mod ids  
-
-```
-delete from channels
-delete from notify
-delete from modlist
-```
-
-```
-insert into channels (channel_id) values (<channel_id_here>)
-insert into notify (notify_channel_id) values (<channel_id_here>)
-insert into modlist (user_id) values (<user_id_here>)
-```
-
-created tables list:  
-
-```
-select * from tables
-```
-
-table columns info:  
-
-```
-pragma table_info(<table_name_here>)
-```
+run `token_setup.py` to add discord bot token, twitch app client id,  
+channel ids for bot and stream notify channels, user ids for bot moderators  
 
 ## global variables
 
