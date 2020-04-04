@@ -30,6 +30,15 @@ stream_discord_embed_hex6 = "#00BFFF"
 prefix = '!'
 
 
+def mod_command(func):
+    def wrap(*args, **kwargs):
+        if not user_is_mod(args[0]):
+            return
+        return func(*args, *kwargs)
+
+    return wrap
+
+
 def get_stream_discord_embed(channel_info: dict):
     """
     get discord.Embed for stream notification
@@ -122,9 +131,8 @@ async def ttv_command(message):
             embed=embed)
 
 
+@mod_command
 async def channel_command(message):
-    if not user_is_mod(message):
-        return
     try:
         messagesplit = message.content.split()
         target_channel = int(messagesplit[1])
@@ -177,9 +185,8 @@ async def colorinfo_command(message):
                                    file=discord.File(fp=image_binary, filename='image.png'))
 
 
+@mod_command
 async def nocolors_command(message):
-    if not user_is_mod(message):
-        return
     for role in message.guild.roles:
         if re.match(hex_color_regex, role.name):
             await role.delete()
@@ -250,9 +257,8 @@ async def colors_command(message):
     await message.channel.send(f'created color roles - {", ".join(colors_list)}')
 
 
+@mod_command
 async def exit_command(message):
-    if not user_is_mod(message):
-        return
     os._exit(0)
 
 
@@ -311,10 +317,10 @@ async def on_message(message):
     messagesplit = message.content.split()
 
     if message.content.startswith(prefix):
-        command = commands_dict.get(messagesplit[0][1:], None)
-        if command is None:
+        try:
+            await commands_dict[messagesplit[0][1:]](message)
+        except (KeyError, TypeError):
             return
-        await command(message)
 
 
 @client.event
