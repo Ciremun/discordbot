@@ -283,6 +283,7 @@ nocolor - remove color role
 color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
 colors - list created color roles
 ttv - check if live on twitch
+info - uptime, bot channels, modlist
 mod_commands:
 channel <channel_id> - add/remove bot channel
 nocolors - delete all color roles```""")
