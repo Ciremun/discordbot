@@ -33,5 +33,5 @@ prefix(str) - chat command prefix
 
 ## commands
 
-everyone: color, nocolor, colorinfo, colors, ttv, help  
+everyone: color, nocolor, colorinfo, colors, ttv, help, info  
 bot moderators: channel, nocolors, exit  
