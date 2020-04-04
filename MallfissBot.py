@@ -121,28 +121,9 @@ async def ttv_command(message):
             embed=embed)
 
 
-async def listen_command(message):
+async def channel_command(message):
     if not user_is_mod(message):
         return
-    try:
-        if message.content.split()[1]:
-            await listen_mute_command(message, db.connect_channel, True, ['already listening', 'added to'],
-                                      bot_channel_ids.append)
-    except IndexError:
-        result = [i[0] for i in db.get_channels()]
-        response = [f'{channel.guild} - #{channel.name}\n' for channel in
-                    [client.get_channel(channel_id) for channel_id in result]]
-        await message.channel.send(f"""```css\n{''.join(response)}```""")
-
-
-async def mute_command(message):
-    if not user_is_mod(message):
-        return
-    await listen_mute_command(message, db.disconnect_channel, False, ['not listening', 'removed from'],
-                              bot_channel_ids.remove)
-
-
-async def listen_mute_command(message, db_call, if_param, response_list, bot_channel_ids_act):
     try:
         messagesplit = message.content.split()
         target_channel = int(messagesplit[1])
@@ -150,21 +131,34 @@ async def listen_mute_command(message, db_call, if_param, response_list, bot_cha
                    channel.type == discord.ChannelType.text):
             await message.channel.send(f'{message.author.mention}, {target_channel} - unknown channel id')
             return
-        elif bool(db.get_channel_by_id(target_channel)) == if_param:
-            channel_object = client.get_channel(target_channel)
-            await message.channel.send(
-                f'{message.author.mention}, {response_list[0]} to {channel_object.guild} - {channel_object.mention}')
-            return
-        db_call(target_channel)
-        bot_channel_ids_act(target_channel)
         channel_object = client.get_channel(target_channel)
-        await message.channel.send(
-            f'{message.author.mention}, {channel_object.guild} - {channel_object.mention} successfully '
-            f'{response_list[1]} listen')
+        if db.get_channel_by_id(target_channel):
+            db.disconnect_channel(target_channel)
+            bot_channel_ids.remove(target_channel)
+            await message.channel.send(
+                f'{message.author.mention}, successfully removed '
+                f'{channel_object.guild} - {channel_object.mention} from listen')
+        else:
+            db.connect_channel(target_channel)
+            bot_channel_ids.append(target_channel)
+            await message.channel.send(
+                f'{message.author.mention}, successfully added '
+                f'{channel_object.guild} - {channel_object.mention} to listen')
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting to int')
     except IndexError:
-        await message.channel.send(f'{message.author.mention}, no channel id')
+        response = ''
+        for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids}, {'modlist:': modlist}]:
+            for name, category in dictionary.items():
+                response += f'{name}\n'
+                for channel_id in category:
+                    if name != 'modlist:':
+                        channel = client.get_channel(channel_id)
+                        response += f'{channel.guild} - #{channel.name}\n'
+                    else:
+                        response += f'[{client.get_user(channel_id).name}]\n'
+                response += '\n'
+        await message.channel.send(f"""```css\n{response}```""")
 
 
 async def colorinfo_command(message):
@@ -283,8 +277,7 @@ color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245
 colors - list created color roles
 ttv - check if live on twitch
 mod_commands:
-listen - add bot channel
-mute - remove bot channel
+channel [channel_id] - list bot channels and modlist, add/remove channel
 nocolors - delete all color roles```""")
 
 
@@ -295,10 +288,9 @@ commands_dict = {
     'colors': colors_command,
     'nocolor': nocolor_command,
     'nocolors': nocolors_command,
-    'listen': listen_command,
-    'mute': mute_command,
     'exit': exit_command,
-    'colorinfo': colorinfo_command
+    'colorinfo': colorinfo_command,
+    'channel': channel_command
 }
 
 
@@ -328,6 +320,10 @@ async def on_ready():
     print(f'listening to:')
     [print(f'{channel.guild} - #{channel.name}') for channel in
      [client.get_channel(channel_id) for channel_id in bot_channel_ids]]
+    print('--------------')
+    print(f'stream notify:')
+    [print(f'{channel.guild} - #{channel.name}') for channel in
+     [client.get_channel(channel_id) for channel_id in notify_channel_ids]]
 
     if notify_enabled:
         live_notify.call_check_if_live(notify_twitcher_username)
