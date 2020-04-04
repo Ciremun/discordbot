@@ -131,7 +131,7 @@ async def connect_command(message):
 async def disconnect_command(message):
     if not user_is_mod(message):
         return
-    await connect_disconnect_command(message, db.disconnect_channel, False, ['not connected', 'removed from'],
+    await connect_disconnect_command(message, db.disconnect_channel, False, ['not listening', 'removed from'],
                                      bot_channel_ids.remove)
 
 
@@ -139,19 +139,25 @@ async def connect_disconnect_command(message, db_call, if_param, response_list, 
     try:
         messagesplit = message.content.split()
         target_channel = int(messagesplit[1])
-        if db.get_channel_by_id(target_channel) == if_param:
-            await message.channel.send(f'{message.author.mention}, {response_list[0]} to {messagesplit[1]}')
+        if not any(target_channel == channel.id for channel in message.guild.channels if
+                   channel.type == discord.ChannelType.text):
+            await message.channel.send(f'{message.author.mention}, {target_channel} - unknown channel id')
+            return
+        elif bool(db.get_channel_by_id(target_channel)) == if_param:
+            channel_object = client.get_channel(target_channel)
+            await message.channel.send(
+                f'{message.author.mention}, {response_list[0]} to {channel_object.guild} - {channel_object.mention}')
             return
         db_call(target_channel)
         bot_channel_ids_act(target_channel)
         channel_object = client.get_channel(target_channel)
         await message.channel.send(
-            f'{message.author.mention}, {channel_object.guild} - #{channel_object.name} successfully '
+            f'{message.author.mention}, {channel_object.guild} - {channel_object.mention} successfully '
             f'{response_list[1]} listen')
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting to int')
     except IndexError:
-        await message.channel.send(f'{message.author.mention}, no channel_id!')
+        await message.channel.send(f'{message.author.mention}, no channel id')
 
 
 async def connections_command(message):
