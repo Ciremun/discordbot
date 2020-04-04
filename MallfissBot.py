@@ -148,19 +148,7 @@ async def channel_command(message):
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting to int')
     except IndexError:
-        response = ''
-        for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids},
-                           {'modlist:': modlist}]:
-            for name, category in dictionary.items():
-                response += f'{name}\n'
-                for channel_id in category:
-                    if name != 'modlist:':
-                        channel = client.get_channel(channel_id)
-                        response += f'{channel.guild} - #{channel.name}\n'
-                    else:
-                        response += f'[{client.get_user(channel_id).name}]\n'
-                response += '\n'
-        await message.channel.send(f"""```css\n{response}```""")
+        await message.channel.send(f'{message.author.mention}, no channel id')
 
 
 async def colorinfo_command(message):
@@ -269,7 +257,20 @@ async def exit_command(message):
 
 
 async def info_command(message):
-    await message.channel.send(f'uptime: {seconds_convert(floor(time.time() - start_time))}')
+    response = ''
+    for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids},
+                       {'modlist:': modlist}]:
+        for name, category in dictionary.items():
+            response += f'{name}\n'
+            for channel_id in category:
+                if name != 'modlist:':
+                    channel = client.get_channel(channel_id)
+                    response += f'{channel.guild} - #{channel.name}\n'
+                else:
+                    response += f'[{client.get_user(channel_id).name}]\n'
+            response += '\n'
+    await message.channel.send(
+        f"""uptime: {seconds_convert(floor(time.time() - start_time))}\n```css\n{response}\n```""")
 
 
 async def help_command(message):
@@ -283,7 +284,7 @@ color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245
 colors - list created color roles
 ttv - check if live on twitch
 mod_commands:
-channel [channel_id] - list bot channels and modlist, add/remove channel
+channel <channel_id> - add/remove bot channel
 nocolors - delete all color roles```""")
 
 
