@@ -34,7 +34,7 @@ def mod_command(func):
     def wrap(*args, **kwargs):
         if not user_is_mod(args[0]):
             return
-        return func(*args, *kwargs)
+        return func(*args, **kwargs)
 
     return wrap
 
