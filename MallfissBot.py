@@ -12,6 +12,7 @@ from math import floor
 from datetime import datetime
 import time
 
+start_time = time.time()
 TOKEN, client_id = [line.split(' ')[1].rstrip() for line in open('tokens')]
 # reading tokens from "tokens" file, local dir
 client = discord.Client()
@@ -148,7 +149,8 @@ async def channel_command(message):
         await message.channel.send(f'{message.author.mention}, error converting to int')
     except IndexError:
         response = ''
-        for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids}, {'modlist:': modlist}]:
+        for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids},
+                           {'modlist:': modlist}]:
             for name, category in dictionary.items():
                 response += f'{name}\n'
                 for channel_id in category:
@@ -266,6 +268,10 @@ async def exit_command(message):
     os._exit(0)
 
 
+async def info_command(message):
+    await message.channel.send(f'uptime: {seconds_convert(floor(time.time() - start_time))}')
+
+
 async def help_command(message):
     await message.channel.send(
         f"""```css
@@ -290,7 +296,8 @@ commands_dict = {
     'nocolors': nocolors_command,
     'exit': exit_command,
     'colorinfo': colorinfo_command,
-    'channel': channel_command
+    'channel': channel_command,
+    'info': info_command
 }
 
 
