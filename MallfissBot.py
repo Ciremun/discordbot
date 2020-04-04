@@ -121,21 +121,28 @@ async def ttv_command(message):
             embed=embed)
 
 
-async def connect_command(message):
+async def listen_command(message):
     if not user_is_mod(message):
         return
-    await connect_disconnect_command(message, db.connect_channel, True, ['already listening', 'added to'],
-                                     bot_channel_ids.append)
+    try:
+        if message.content.split()[1]:
+            await listen_mute_command(message, db.connect_channel, True, ['already listening', 'added to'],
+                                      bot_channel_ids.append)
+    except IndexError:
+        result = [i[0] for i in db.get_channels()]
+        response = [f'{channel.guild} - #{channel.name}\n' for channel in
+                    [client.get_channel(channel_id) for channel_id in result]]
+        await message.channel.send(f"""```css\n{''.join(response)}```""")
 
 
-async def disconnect_command(message):
+async def mute_command(message):
     if not user_is_mod(message):
         return
-    await connect_disconnect_command(message, db.disconnect_channel, False, ['not listening', 'removed from'],
-                                     bot_channel_ids.remove)
+    await listen_mute_command(message, db.disconnect_channel, False, ['not listening', 'removed from'],
+                              bot_channel_ids.remove)
 
 
-async def connect_disconnect_command(message, db_call, if_param, response_list, bot_channel_ids_act):
+async def listen_mute_command(message, db_call, if_param, response_list, bot_channel_ids_act):
     try:
         messagesplit = message.content.split()
         target_channel = int(messagesplit[1])
@@ -158,15 +165,6 @@ async def connect_disconnect_command(message, db_call, if_param, response_list, 
         await message.channel.send(f'{message.author.mention}, error converting to int')
     except IndexError:
         await message.channel.send(f'{message.author.mention}, no channel id')
-
-
-async def connections_command(message):
-    if not user_is_mod(message):
-        return
-    result = [i[0] for i in db.get_channels()]
-    response = [f'{channel.guild} - #{channel.name}\n' for channel in
-                [client.get_channel(channel_id) for channel_id in result]]
-    await message.channel.send(f"""```css\n{''.join(response)}```""")
 
 
 async def colorinfo_command(message):
@@ -285,7 +283,8 @@ color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245
 colors - list created color roles
 ttv - check if live on twitch
 mod_commands:
-connect, disconnect, connections
+listen - add bot channel
+mute - remove bot channel
 nocolors - delete all color roles```""")
 
 
@@ -296,9 +295,8 @@ commands_dict = {
     'colors': colors_command,
     'nocolor': nocolor_command,
     'nocolors': nocolors_command,
-    'connections': connections_command,
-    'connect': connect_command,
-    'disconnect': disconnect_command,
+    'listen': listen_command,
+    'mute': mute_command,
     'exit': exit_command,
     'colorinfo': colorinfo_command
 }
