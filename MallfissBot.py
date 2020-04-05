@@ -31,12 +31,12 @@ prefix = '!'
 
 
 def mod_command(func):
-    def wrap(*args, **kwargs):
-        if not user_is_mod(args[0]):
+    def wrapper(message, *args, **kwargs):
+        if not user_is_mod(message):
             return
-        return func(*args, **kwargs)
+        return func(message, *args, **kwargs)
 
-    return wrap
+    return wrapper
 
 
 def get_stream_discord_embed(channel_info: dict):
