@@ -28,6 +28,15 @@ notify_twitcher_username = 'mallfiss_'
 discord_guild_id = 692557289982394418
 stream_discord_embed_hex6 = "#00BFFF"
 prefix = '!'
+commands_dict = {}
+
+
+def bot_command(func):
+    def wrapper(message, *args, **kwargs):
+        return func(message, *args, **kwargs)
+
+    commands_dict[func.__code__.co_name[:-8]] = wrapper
+    return wrapper
 
 
 def mod_command(func):
@@ -35,6 +44,8 @@ def mod_command(func):
         if not user_is_mod(message):
             return
         return func(message, *args, **kwargs)
+
+    commands_dict[func.__code__.co_name[:-8]] = wrapper
     return wrapper
 
 
@@ -114,6 +125,7 @@ def user_is_mod(message):
     return bool(any(message.author.id == i for i in modlist))
 
 
+@bot_command
 async def ttv_command(message):
     channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={notify_twitcher_username}",
                                 headers={"Client-ID": f'{client_id}'}).json()['data']
@@ -161,6 +173,7 @@ async def channel_command(message):
         await message.channel.send(f'{message.author.mention}, no channel id')
 
 
+@bot_command
 async def colorinfo_command(message):
     messagesplit = message.content.split()
     color_code = ' '.join(messagesplit[1:])
@@ -194,6 +207,7 @@ async def nocolors_command(message):
             await role.delete()
 
 
+@bot_command
 async def nocolor_command(message):
     for role in message.author.roles:
         if re.match(hex_color_regex, role.name):
@@ -202,6 +216,7 @@ async def nocolor_command(message):
     await message.channel.send(f'{message.author.mention}, you have no color role')
 
 
+@bot_command
 async def color_command(message):
     messagesplit = message.content.split()
     color_code = ' '.join(messagesplit[1:])
@@ -251,6 +266,7 @@ async def color_command(message):
         await message.author.add_roles(new_role)
 
 
+@bot_command
 async def colors_command(message):
     colors_list = [role.mention for role in message.guild.roles if re.match(hex_color_regex, role.name)]
     if not colors_list:
@@ -264,6 +280,7 @@ async def exit_command(message):
     os._exit(0)
 
 
+@bot_command
 async def info_command(message):
     response = ''
     for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids},
@@ -281,6 +298,7 @@ async def info_command(message):
         f"""uptime: {seconds_convert(floor(time.time() - start_time))}\n```css\n{response}\n```""")
 
 
+@bot_command
 async def help_command(message):
     await message.channel.send(
         f"""```css
@@ -295,20 +313,6 @@ info - uptime, bot channels, modlist
 mod_commands:
 channel <channel_id> - add/remove bot channel
 nocolors - delete all color roles```""")
-
-
-commands_dict = {
-    'help': help_command,
-    'ttv': ttv_command,
-    'color': color_command,
-    'colors': colors_command,
-    'nocolor': nocolor_command,
-    'nocolors': nocolors_command,
-    'exit': exit_command,
-    'colorinfo': colorinfo_command,
-    'channel': channel_command,
-    'info': info_command
-}
 
 
 @client.event
