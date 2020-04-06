@@ -57,20 +57,23 @@ def get_stream_discord_embed(channel_info: dict):
     return embed
 
 
-def new_timecode_explicit(seconds, minutes, hours, duration):
+def new_timecode_explicit(seconds, minutes, hours, days, duration):
     if duration <= 59:
-        return f'{duration}s'
+        return f'{seconds}s'
     elif duration <= 3599:
         return f'{minutes}m {seconds}s'
-    else:
+    elif duration <= 86399:
         return f'{hours}h {minutes}m {seconds}s'
+    else:
+        return f'{days}d {hours}h {minutes}m'
 
 
 def seconds_convert(duration):
+    d = floor(duration / 86400)
     h = floor(duration / 3600)
     m = floor(duration % 3600 / 60)
     s = floor(duration % 3600 % 60)
-    return new_timecode_explicit(s, m, h, duration)
+    return new_timecode_explicit(s, m, h, d, duration)
 
 
 def convert_utc_to_epoch(utc_time: str) -> float:
