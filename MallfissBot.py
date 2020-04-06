@@ -35,7 +35,6 @@ def mod_command(func):
         if not user_is_mod(message):
             return
         return func(message, *args, **kwargs)
-
     return wrapper
 
 
