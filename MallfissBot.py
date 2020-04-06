@@ -69,7 +69,10 @@ def get_stream_discord_embed(channel_info: dict):
 
 
 def new_timecode_explicit(days, hours, minutes, seconds, duration):
-    if duration <= 59:
+    if duration < 1:
+        ms = floor(duration * 1000)
+        return f'{ms}ms'
+    elif duration <= 59:
         return f'{seconds}s'
     elif duration <= 3599:
         return f'{minutes}m {seconds}s'
@@ -86,8 +89,8 @@ def seconds_convert(duration):
     hours = duration // 3600
     duration %= 3600
     minutes = duration // 60
-    duration %= 60
-    seconds = duration
+    seconds = duration % 60
+    days, hours, minutes, seconds = [floor(x) for x in [days, hours, minutes, seconds]]
     return new_timecode_explicit(days, hours, minutes, seconds, init_duration)
 
 
