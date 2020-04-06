@@ -346,9 +346,6 @@ async def on_ready():
     [print(f'{channel.guild} - #{channel.name}') for channel in
      [client.get_channel(channel_id) for channel_id in notify_channel_ids]]
 
-    if notify_enabled:
-        live_notify.call_check_if_live(notify_twitcher_username)
-
 
 class ThreadDB:
 
@@ -398,6 +395,10 @@ class AsyncioLoop:
                 await asyncio.sleep(0.1)
 
         def run_it_forever(loop):
+            if notify_enabled:
+                while not client.is_ready():
+                    time.sleep(1)
+                self.call_check_if_live(notify_twitcher_username)
             loop.run_forever()
 
         self.loop.create_task(start())
