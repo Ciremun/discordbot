@@ -377,7 +377,6 @@ class StreamNotify(threading.Thread):
         threading.Thread.__init__(self)
         self.name = name
         self.sleep_time = notify_sleep_time
-        self.notify_messages = []
         self.twitchers_dict = {}
         self.requests_str = 'https://api.twitch.tv/helix/streams?'
         for username in notify_twitcher_usernames:
