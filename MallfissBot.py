@@ -21,13 +21,15 @@ hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
 rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 color_roles_limit = 50
-bot_channel_ids, notify_channel_ids, modlist = [], [], []
-# discord channel ids to listen and send stream notify, discord user ids for bot mod commands, edit via db_query
 notify_enabled = True
 notify_twitcher_username = 'mallfiss_'
 discord_guild_id = 692557289982394418
-stream_discord_embed_hex6 = "#00BFFF"
+stream_discord_embed_hex6 = "#3498db"
 prefix = '!'
+notify_sleep_time = 90
+
+bot_channel_ids, notify_channel_ids, modlist = [], [], []
+# discord channel ids to listen and send stream notify, discord user ids for bot mod commands, edit via db_query
 commands_dict = {}
 
 
@@ -70,8 +72,7 @@ def get_stream_discord_embed(channel_info: dict):
 
 def new_timecode_explicit(days, hours, minutes, seconds, duration):
     if duration < 1:
-        ms = floor(duration * 1000)
-        return f'{ms}ms'
+        return f'{floor(duration * 1000)}ms'
     elif duration <= 59:
         return f'{seconds}s'
     elif duration <= 3599:
@@ -354,7 +355,7 @@ async def on_ready():
      [client.get_channel(channel_id) for channel_id in notify_channel_ids]]
 
 
-class ThreadDB:
+class DiscordData:
 
     def __init__(self):
         global bot_channel_ids, notify_channel_ids, modlist
@@ -389,62 +390,58 @@ class ThreadDB:
         return self.c.fetchall()
 
 
-class AsyncioLoop:
+class StreamNotify(threading.Thread):
 
-    def __init__(self, loop):
-        self.loop = loop
-        self.notification_sent = True
-        self.sleep_time = 600
-        asyncio.set_event_loop(self.loop)
+    def __init__(self, name):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.notification_sent = False
+        self.sleep_time = notify_sleep_time
+        self.notify_messages = []
+        self.channel_info = None
 
-        async def start():
-            while True:
-                await asyncio.sleep(0.1)
+    def run(self):
+        if notify_enabled:
+            while not client.is_ready():
+                time.sleep(1)
+            self.check_if_live(notify_twitcher_username)
 
-        def run_it_forever(loop):
-            if notify_enabled:
-                while not client.is_ready():
-                    time.sleep(1)
-                self.call_check_if_live(notify_twitcher_username)
-            loop.run_forever()
-
-        self.loop.create_task(start())
-        thread = threading.Thread(target=run_it_forever, args=(self.loop,))
-        thread.start()
-
-    def call_check_if_live(self, username):
-        self.loop.create_task(self.check_if_live(username))
-
-    async def check_if_live(self, username):
-        if not notify_enabled:
-            return
-        channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}",
-                                    headers={"Client-ID": f'{client_id}'}).json()['data']
-        if not channel_info or channel_info[0]['type'] != 'live':
-            self.notification_sent = False
-            self.sleep_time = 120
-        elif not self.notification_sent:
-            channel_info = channel_info[0]
-            self.sleep_time = 600
-            try:
-                channel_info['game'] = requests.get(f"https://api.twitch.tv/helix/games?id={channel_info['game_id']}",
-                                                    headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
-            except IndexError:
-                channel_info['game'] = 'nothing xd'
-            embed = get_stream_discord_embed(channel_info)
-            for channel_id in notify_channel_ids:
-                channel = client.get_channel(channel_id)
-                asyncio.run_coroutine_threadsafe(
-                    channel.send(
-                        f'@everyone https://www.twitch.tv/{username} is live '
-                        f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                        embed=embed), client.loop)
+    def check_if_live(self, username):
+        while notify_enabled:
+            channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}",
+                                        headers={"Client-ID": f'{client_id}'}).json()['data']
+            if not channel_info or channel_info[0]['type'] != 'live':
+                if self.notify_messages:
+                    stream_duration = time.time() - convert_utc_to_epoch(self.channel_info["started_at"])
+                    stream_duration = seconds_convert(stream_duration - self.sleep_time)
+                    for message in self.notify_messages:
+                        asyncio.run_coroutine_threadsafe(message.edit(
+                            content=f'Stream ended, it lasted {stream_duration}',
+                            embed=None), client.loop)
+                    self.notify_messages *= 0
+                self.notification_sent = False
+            elif not self.notification_sent:
+                self.channel_info = channel_info[0]
+                try:
+                    self.channel_info['game'] = \
+                        requests.get(f"https://api.twitch.tv/helix/games?id={self.channel_info['game_id']}",
+                                     headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
+                except IndexError:
+                    self.channel_info['game'] = 'nothing xd'
+                embed = get_stream_discord_embed(self.channel_info)
+                for channel_id in notify_channel_ids:
+                    channel = client.get_channel(channel_id)
+                    future = asyncio.run_coroutine_threadsafe(
+                        channel.send(
+                            f'@everyone https://www.twitch.tv/{username} is live '
+                            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                            embed=embed), client.loop)
+                    self.notify_messages.append(future.result())
                 self.notification_sent = True
-        await asyncio.sleep(self.sleep_time)
-        self.loop.create_task(self.check_if_live(username))
+            time.sleep(self.sleep_time)
 
 
-db = ThreadDB()
-live_notify_loop = asyncio.new_event_loop()
-live_notify = AsyncioLoop(live_notify_loop)
+db = DiscordData()
+stream_notify = StreamNotify('StreamNotify')
+stream_notify.start()
 client.run(TOKEN)
