@@ -1,4 +1,4 @@
-# shtcd
+# shtcd discord bot
 
 simple discord bot  
 allows you to:  
