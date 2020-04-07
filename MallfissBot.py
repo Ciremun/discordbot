@@ -22,7 +22,7 @@ rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 color_roles_limit = 50
 notify_enabled = True
-notify_twitcher_username = 'mallfiss_'
+notify_twitcher_usernames = ['mallfiss_']
 discord_guild_id = 692557289982394418
 stream_discord_embed_hex6 = "#3498db"
 prefix = '!'
@@ -131,26 +131,6 @@ def hex_to_rgb(hex_color: str):
 
 def user_is_mod(message):
     return bool(any(message.author.id == i for i in modlist))
-
-
-@bot_command
-async def ttv_command(message):
-    channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={notify_twitcher_username}",
-                                headers={"Client-ID": f'{client_id}'}).json()['data']
-    if not channel_info or channel_info[0]['type'] != 'live':
-        await message.channel.send(f'{notify_twitcher_username} is offline')
-    else:
-        channel_info = channel_info[0]
-        try:
-            channel_info['game'] = requests.get(f"https://api.twitch.tv/helix/games?id={channel_info['game_id']}",
-                                                headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
-        except IndexError:
-            channel_info['game'] = 'nothing xd'
-        embed = get_stream_discord_embed(channel_info)
-        await message.channel.send(
-            f'https://www.twitch.tv/{notify_twitcher_username} is live '
-            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-            embed=embed)
 
 
 @mod_command
@@ -316,7 +296,6 @@ colorinfo <#hex or rgb> - get color image
 nocolor - remove color role
 color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
 colors - list created color roles
-ttv - check if live on twitch
 info - uptime, bot channels, modlist
 mod_commands:
 channel <channel_id> - add/remove bot channel
@@ -393,51 +372,66 @@ class DiscordData:
 class StreamNotify(threading.Thread):
 
     def __init__(self, name):
+        global notify_twitcher_usernames
+        notify_twitcher_usernames = [x.lower() for x in notify_twitcher_usernames]
         threading.Thread.__init__(self)
         self.name = name
-        self.notification_sent = False
         self.sleep_time = notify_sleep_time
         self.notify_messages = []
-        self.channel_info = None
+        self.twitchers_dict = {}
+        self.requests_str = 'https://api.twitch.tv/helix/streams?'
+        for username in notify_twitcher_usernames:
+            self.requests_str += f'user_login={username}&'
+            self.twitchers_dict[username] = {'notify_sent': False,
+                                             'user_data': {},
+                                             'notify_messages': [],
+                                             'started_at': ''}
+        self.requests_str = self.requests_str[:-1]
 
     def run(self):
         if notify_enabled:
             while not client.is_ready():
                 time.sleep(1)
-            self.check_if_live(notify_twitcher_username)
+            self.check_if_live()
 
-    def check_if_live(self, username):
+    def check_if_live(self):
         while notify_enabled:
-            channel_info = requests.get(f"https://api.twitch.tv/helix/streams?user_login={username}",
-                                        headers={"Client-ID": f'{client_id}'}).json()['data']
-            if not channel_info or channel_info[0]['type'] != 'live':
-                if self.notify_messages:
-                    stream_duration = time.time() - convert_utc_to_epoch(self.channel_info["started_at"])
-                    stream_duration = seconds_convert(stream_duration - self.sleep_time)
-                    for message in self.notify_messages:
-                        asyncio.run_coroutine_threadsafe(message.edit(
-                            content=f'Stream ended, it lasted {stream_duration}',
-                            embed=None), client.loop)
-                    self.notify_messages *= 0
-                self.notification_sent = False
-            elif not self.notification_sent:
-                self.channel_info = channel_info[0]
-                try:
-                    self.channel_info['game'] = \
-                        requests.get(f"https://api.twitch.tv/helix/games?id={self.channel_info['game_id']}",
-                                     headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
-                except IndexError:
-                    self.channel_info['game'] = 'nothing xd'
-                embed = get_stream_discord_embed(self.channel_info)
-                for channel_id in notify_channel_ids:
-                    channel = client.get_channel(channel_id)
-                    future = asyncio.run_coroutine_threadsafe(
-                        channel.send(
-                            f'@everyone https://www.twitch.tv/{username} is live '
-                            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                            embed=embed), client.loop)
-                    self.notify_messages.append(future.result())
-                self.notification_sent = True
+            channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
+            for user_data in channels_data:
+                self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
+            for username in notify_twitcher_usernames:
+                if not self.twitchers_dict[username]['user_data']:
+                    if self.twitchers_dict[username]['notify_messages']:
+                        stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
+                            self.twitchers_dict[username]['started_at']))
+                        for message in self.twitchers_dict[username]['notify_messages']:
+                            asyncio.run_coroutine_threadsafe(message.edit(
+                                content=f'Stream ended, it lasted {stream_duration}',
+                                embed=None), client.loop)
+                        self.twitchers_dict[username]['notify_messages'] *= 0
+                    self.twitchers_dict[username]['notify_sent'] = False
+                elif not self.twitchers_dict[username]['notify_sent']:
+                    try:
+                        self.twitchers_dict[username]['user_data']['game'] = \
+                            requests.get(
+                                f"https://api.twitch.tv/helix/games?id="
+                                f"{self.twitchers_dict[username]['user_data']['game_id']}",
+                                headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
+                    except IndexError:
+                        self.twitchers_dict[username]['user_data']['game'] = 'nothing xd'
+                    embed = get_stream_discord_embed(self.twitchers_dict[username]['user_data'])
+                    for channel_id in notify_channel_ids:
+                        channel = client.get_channel(channel_id)
+                        future = asyncio.run_coroutine_threadsafe(
+                            channel.send(
+                                f'@everyone https://www.twitch.tv/{username} is live '
+                                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                                embed=embed), client.loop)
+                        self.twitchers_dict[username]['notify_messages'].append(future.result())
+                    self.twitchers_dict[username]['notify_sent'] = True
+                    self.twitchers_dict[username]['started_at'] = \
+                        self.twitchers_dict[username]['user_data']['started_at']
+                self.twitchers_dict[username]['user_data'].clear()
             time.sleep(self.sleep_time)
 
 
