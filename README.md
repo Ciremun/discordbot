@@ -1,4 +1,4 @@
-# CiremunDiscordBot
+# shtcd
 
 simple discord bot  
 allows you to:  
