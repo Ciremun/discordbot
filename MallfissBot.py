@@ -22,7 +22,7 @@ rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 color_roles_limit = 50
 notify_enabled = True
-notify_twitcher_usernames = ['mallfiss_']
+notify_twitcher_usernames = {'mallfiss_': [694206177076052008]}
 discord_guild_id = 692557289982394418
 stream_discord_embed_hex6 = "#3498db"
 prefix = '!'
@@ -371,18 +371,19 @@ class StreamNotify(threading.Thread):
 
     def __init__(self, name):
         global notify_twitcher_usernames
-        notify_twitcher_usernames = [x.lower() for x in notify_twitcher_usernames]
         threading.Thread.__init__(self)
         self.name = name
+        notify_twitcher_usernames = {k.lower(): v for k, v in notify_twitcher_usernames.items()}
         self.sleep_time = notify_sleep_time
         self.twitchers_dict = {}
         self.requests_str = 'https://api.twitch.tv/helix/streams?'
-        for username in notify_twitcher_usernames:
+        for username, channel_ids in notify_twitcher_usernames.items():
             self.requests_str += f'user_login={username}&'
             self.twitchers_dict[username] = {'notify_sent': False,
                                              'user_data': {},
                                              'notify_messages': [],
-                                             'started_at': ''}
+                                             'started_at': '',
+                                             'notify_channels': channel_ids}
         self.requests_str = self.requests_str[:-1]
 
     def run(self):
@@ -402,9 +403,15 @@ class StreamNotify(threading.Thread):
                         stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
                             self.twitchers_dict[username]['started_at']))
                         for message in self.twitchers_dict[username]['notify_messages']:
-                            asyncio.run_coroutine_threadsafe(message.edit(
+                            future = asyncio.run_coroutine_threadsafe(message.edit(
                                 content=f'Stream ended, it lasted {stream_duration}',
                                 embed=None), client.loop)
+                            try:
+                                future.result()
+                            except discord.errors.NotFound:
+                                asyncio.run_coroutine_threadsafe(message.channel.send
+                                                                 (f'Stream ended, it lasted {stream_duration}'),
+                                                                 client.loop)
                         self.twitchers_dict[username]['notify_messages'] *= 0
                     self.twitchers_dict[username]['notify_sent'] = False
                 elif not self.twitchers_dict[username]['notify_sent']:
@@ -417,7 +424,7 @@ class StreamNotify(threading.Thread):
                     except IndexError:
                         self.twitchers_dict[username]['user_data']['game'] = 'nothing xd'
                     embed = get_stream_discord_embed(self.twitchers_dict[username]['user_data'])
-                    for channel_id in notify_channel_ids:
+                    for channel_id in self.twitchers_dict[username]['notify_channels']:
                         channel = client.get_channel(channel_id)
                         future = asyncio.run_coroutine_threadsafe(
                             channel.send(
