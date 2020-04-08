@@ -73,14 +73,12 @@ def get_stream_discord_embed(channel_info: dict):
 def new_timecode_explicit(days, hours, minutes, seconds, duration):
     if duration < 1:
         return f'{floor(duration * 1000)}ms'
-    elif duration <= 59:
-        return f'{seconds}s'
-    elif duration <= 3599:
-        return f'{minutes}m {seconds}s'
-    elif duration <= 86399:
-        return f'{hours}h {minutes}m {seconds}s'
-    else:
-        return f'{days}d {hours}h {minutes}m'
+    timecode = []
+    timecode_dict = {'d': days, 'h': hours, 'm': minutes, 's': seconds}
+    for k, v in timecode_dict.items():
+        if v:
+            timecode.append(f'{v}{k}')
+    return " ".join(timecode)
 
 
 def seconds_convert(duration):
