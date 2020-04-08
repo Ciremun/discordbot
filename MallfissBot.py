@@ -12,25 +12,20 @@ from math import floor
 from datetime import datetime
 import time
 
-start_time = time.time()
-TOKEN, client_id = [line.split(' ')[1].rstrip() for line in open('tokens')]
-# reading tokens from "tokens" file, local dir
-client = discord.Client()
-hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
-hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
-rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
-rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 color_roles_limit = 50
 notify_enabled = True
-notify_twitcher_usernames = {'mallfiss_': [694206177076052008]}
-discord_guild_id = 692557289982394418
 stream_discord_embed_hex6 = "#3498db"
 prefix = '!'
 notify_sleep_time = 90
 
-bot_channel_ids, modlist = [], []
-# discord channel ids to listen and send stream notify, discord user ids for bot mod commands, edit via db_query
-commands_dict = {}
+start_time = time.time()
+TOKEN, client_id = [line.split()[1].rstrip() for line in open('tokens')]
+bot_channel_ids, modlist, commands_dict = [], [], {}
+hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
+hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
+rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
+rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
+client = discord.Client()
 
 
 def bot_command(func):
@@ -64,7 +59,7 @@ def get_stream_discord_embed(channel_info: dict):
     embed.add_field(name='Stream started',
                     value=f'{seconds_convert(time.time() - convert_utc_to_epoch(channel_info["started_at"]))} ago')
     embed.set_footer(text='hehe xd')
-    random_emote_id = get_random_guild_emote(discord_guild_id).get("id", None)
+    random_emote_id = get_random_guild_emote(random.choice([guild.id for guild in client.guilds])).get("id", None)
     if random_emote_id:
         embed.set_image(url=f'https://cdn.discordapp.com/emojis/{random_emote_id}.png')
     return embed
@@ -133,8 +128,8 @@ def user_is_mod(message):
 
 @mod_command
 async def channel_command(message):
+    messagesplit = message.content.split()
     try:
-        messagesplit = message.content.split()
         target_channel = int(messagesplit[1])
         if not any(target_channel == channel.id for channel in message.guild.channels if
                    channel.type == discord.ChannelType.text):
@@ -154,7 +149,7 @@ async def channel_command(message):
                 f'{message.author.mention}, successfully added '
                 f'{channel_object.guild} - {channel_object.mention} to listen')
     except ValueError:
-        await message.channel.send(f'{message.author.mention}, error converting to int')
+        await message.channel.send(f'{message.author.mention}, error converting [{messagesplit[1]}] to int')
     except IndexError:
         await message.channel.send(f'{message.author.mention}, no channel id')
 
@@ -266,6 +261,52 @@ async def exit_command(message):
     os._exit(0)
 
 
+@mod_command
+async def notify_command(message):
+    messagesplit = message.content.split()
+    try:
+        twitch_login = messagesplit[1]
+        if not 4 <= len(twitch_login) <= 25:
+            await message.channel.send(f'{message.author.mention}, twitch login must be between 4 and 25 characters')
+            return
+        notify_channel_id = int(messagesplit[2])
+        if not any(notify_channel_id == channel.id for channel in message.guild.channels if
+                   channel.type == discord.ChannelType.text):
+            await message.channel.send(f'{message.author.mention}, {notify_channel_id} - unknown channel id')
+            return
+        channel_object = client.get_channel(notify_channel_id)
+        if db.get_twitch_notify_by_login(twitch_login):
+            if stream_notify.twitchers_dict[twitch_login]['notify_channel'] != notify_channel_id:
+                db.update_twitch_notify(twitch_login, stream_notify.twitchers_dict[twitch_login]['notify_channel'],
+                                        notify_channel_id)
+                stream_notify.twitchers_dict[twitch_login]['notify_channel'] = notify_channel_id
+                stream_notify.twitchers_dict[twitch_login]['notify_sent'] = False
+                await message.channel.send(f'{message.author.mention}, successfully updated {twitch_login} channel to '
+                                           f'{channel_object.guild} - {channel_object.mention}')
+                return
+            db.remove_twitch_notify(twitch_login, notify_channel_id)
+            del stream_notify.twitchers_dict[twitch_login]
+            stream_notify.requests_str = stream_notify.requests_str.replace(f'&user_login={twitch_login}', '')
+            await message.channel.send(
+                f'{message.author.mention}, successfully removed '
+                f'{channel_object.guild} - {channel_object.mention} from notify')
+        else:
+            db.add_twitch_notify(twitch_login, notify_channel_id)
+            stream_notify.twitchers_dict[twitch_login] = {'notify_sent': False,
+                                                          'user_data': {},
+                                                          'notify_message': None,
+                                                          'started_at': '',
+                                                          'notify_channel': notify_channel_id}
+            stream_notify.requests_str += f'&user_login={twitch_login}'
+            await message.channel.send(
+                f'{message.author.mention}, successfully added '
+                f'{channel_object.guild} - {channel_object.mention} to notify')
+    except ValueError:
+        await message.channel.send(f'{message.author.mention}, error converting [{messagesplit[2]}] to int')
+    except IndexError:
+        await message.channel.send(f'{message.author.mention}, no twitch login / channel id')
+
+
 @bot_command
 async def info_command(message):
     response = ''
@@ -273,11 +314,11 @@ async def info_command(message):
     for channel_id in bot_channel_ids:
         channel = client.get_channel(channel_id)
         response += f'{channel.guild} - #{channel.name}\n'
-    response += '\ntwitch notifications:\n'
-    for username, notify_channels in notify_twitcher_usernames.items():
-        for channel_id in notify_channels:
-            channel = client.get_channel(channel_id)
-            response += f'{username} - {channel.guild} - #{channel.name}\n'
+    if notify_enabled:
+        response += '\ntwitch notifications:\n'
+        for username, data in stream_notify.twitchers_dict.items():
+            channel = client.get_channel(data['notify_channel'])
+            response += f'[{username}] - {channel.guild} - #{channel.name}\n'
     response += '\nmoderators:\n'
     for user_id in modlist:
         user = client.get_user(user_id)
@@ -341,32 +382,55 @@ class DiscordData:
         self.c.execute('SELECT channel_id FROM channels WHERE channel_id = :channel_id', {'channel_id': channel_id})
         return self.c.fetchall()
 
-    def get_notify_channels(self):
-        self.c.execute('SELECT notify_channel_id FROM notify')
+    def get_twitch_notify(self):
+        self.c.execute('SELECT twitch_login, notify_channel_id FROM notify')
+        return self.c.fetchall()
+
+    def get_twitch_notify_by_login(self, twitch_login: str):
+        self.c.execute(
+            'SELECT twitch_login FROM notify WHERE twitch_login = :twitch_login', {'twitch_login': twitch_login})
         return self.c.fetchall()
 
     def get_modlist(self):
         self.c.execute('SELECT user_id FROM modlist')
         return self.c.fetchall()
 
+    def add_twitch_notify(self, twitch_login: str, notify_channel_id: int):
+        with self.conn:
+            self.c.execute(
+                'INSERT INTO notify (twitch_login, notify_channel_id) VALUES (:twitch_login, :notify_channel_id)',
+                {'twitch_login': twitch_login, 'notify_channel_id': notify_channel_id})
+
+    def remove_twitch_notify(self, twitch_login: str, notify_channel_id: int):
+        with self.conn:
+            self.c.execute(
+                'DELETE FROM notify WHERE twitch_login = :twitch_login and notify_channel_id = :notify_channel_id',
+                {'twitch_login': twitch_login, 'notify_channel_id': notify_channel_id})
+
+    def update_twitch_notify(self, twitch_login: str, notify_channel_id: int, new_notify_channel_id: int):
+        with self.conn:
+            self.c.execute(
+                'UPDATE notify SET notify_channel_id = :new_notify_channel_id WHERE twitch_login = :twitch_login and '
+                'notify_channel_id = :notify_channel_id',
+                {'twitch_login': twitch_login,
+                 'notify_channel_id': notify_channel_id, 'new_notify_channel_id': new_notify_channel_id})
+
 
 class StreamNotify(threading.Thread):
 
     def __init__(self, name):
-        global notify_twitcher_usernames
         threading.Thread.__init__(self)
         self.name = name
-        notify_twitcher_usernames = {k.lower(): v for k, v in notify_twitcher_usernames.items()}
+        self.twitchers_dict = {k.lower(): v for k, v in db.get_twitch_notify()}
         self.sleep_time = notify_sleep_time
-        self.twitchers_dict = {}
         self.requests_str = 'https://api.twitch.tv/helix/streams?'
-        for username, channel_ids in notify_twitcher_usernames.items():
+        for username, channel_id in self.twitchers_dict.items():
             self.requests_str += f'user_login={username}&'
             self.twitchers_dict[username] = {'notify_sent': False,
                                              'user_data': {},
-                                             'notify_messages': [],
+                                             'notify_message': None,
                                              'started_at': '',
-                                             'notify_channels': channel_ids}
+                                             'notify_channel': channel_id}
         self.requests_str = self.requests_str[:-1]
 
     def run(self):
@@ -384,8 +448,8 @@ class StreamNotify(threading.Thread):
          [client.get_channel(channel_id) for channel_id in bot_channel_ids]]
         print('--------------')
         print(f'stream notify:')
-        [print(f'[{k}] - {channel.guild} - #{channel.name}') for k, v in notify_twitcher_usernames.items() for
-         channel in [client.get_channel(x) for x in v]]
+        [print(f'[{k}] - {channel.guild} - #{channel.name}') for k, v in stream_notify.twitchers_dict.items() for
+         channel in [client.get_channel(v['notify_channel'])]]
         if notify_enabled:
             self.check_if_live()
 
@@ -394,22 +458,22 @@ class StreamNotify(threading.Thread):
             channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
             for user_data in channels_data:
                 self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
-            for username in notify_twitcher_usernames:
+            for username in self.twitchers_dict:
                 if not self.twitchers_dict[username]['user_data']:
-                    if self.twitchers_dict[username]['notify_messages']:
+                    if self.twitchers_dict[username]['notify_message']:
                         stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
                             self.twitchers_dict[username]['started_at']))
-                        for message in self.twitchers_dict[username]['notify_messages']:
-                            future = asyncio.run_coroutine_threadsafe(message.edit(
-                                content=f'Stream ended, it lasted {stream_duration}',
-                                embed=None), client.loop)
-                            try:
-                                future.result()
-                            except discord.errors.NotFound:
-                                asyncio.run_coroutine_threadsafe(message.channel.send
-                                                                 (f'Stream ended, it lasted {stream_duration}'),
-                                                                 client.loop)
-                        self.twitchers_dict[username]['notify_messages'] *= 0
+                        future = asyncio.run_coroutine_threadsafe(self.twitchers_dict[username]['notify_message'].edit(
+                            content=f'Stream ended, it lasted {stream_duration}',
+                            embed=None), client.loop)
+                        try:
+                            future.result()
+                        except discord.errors.NotFound:
+                            asyncio.run_coroutine_threadsafe(
+                                self.twitchers_dict[username]['notify_message'].channel.send
+                                (f'Stream ended, it lasted {stream_duration}'),
+                                client.loop)
+                        self.twitchers_dict[username]['notify_message'] = None
                     self.twitchers_dict[username]['notify_sent'] = False
                 elif not self.twitchers_dict[username]['notify_sent']:
                     try:
@@ -421,14 +485,13 @@ class StreamNotify(threading.Thread):
                     except IndexError:
                         self.twitchers_dict[username]['user_data']['game'] = 'nothing xd'
                     embed = get_stream_discord_embed(self.twitchers_dict[username]['user_data'])
-                    for channel_id in self.twitchers_dict[username]['notify_channels']:
-                        channel = client.get_channel(channel_id)
-                        future = asyncio.run_coroutine_threadsafe(
-                            channel.send(
-                                f'@everyone https://www.twitch.tv/{username} is live '
-                                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                                embed=embed), client.loop)
-                        self.twitchers_dict[username]['notify_messages'].append(future.result())
+                    channel = client.get_channel(self.twitchers_dict[username]['notify_channel'])
+                    future = asyncio.run_coroutine_threadsafe(
+                        channel.send(
+                            f'@everyone https://www.twitch.tv/{username} is live '
+                            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                            embed=embed), client.loop)
+                    self.twitchers_dict[username]['notify_message'] = future.result()
                     self.twitchers_dict[username]['notify_sent'] = True
                     self.twitchers_dict[username]['started_at'] = \
                         self.twitchers_dict[username]['user_data']['started_at']
