@@ -28,7 +28,7 @@ stream_discord_embed_hex6 = "#3498db"
 prefix = '!'
 notify_sleep_time = 90
 
-bot_channel_ids, notify_channel_ids, modlist = [], [], []
+bot_channel_ids, modlist = [], []
 # discord channel ids to listen and send stream notify, discord user ids for bot mod commands, edit via db_query
 commands_dict = {}
 
@@ -269,19 +269,21 @@ async def exit_command(message):
 @bot_command
 async def info_command(message):
     response = ''
-    for dictionary in [{'listening to:': bot_channel_ids}, {'notify channels:': notify_channel_ids},
-                       {'modlist:': modlist}]:
-        for name, category in dictionary.items():
-            response += f'{name}\n'
-            for channel_id in category:
-                if name != 'modlist:':
-                    channel = client.get_channel(channel_id)
-                    response += f'{channel.guild} - #{channel.name}\n'
-                else:
-                    response += f'[{client.get_user(channel_id).name}]\n'
-            response += '\n'
+    response += 'listening to:\n'
+    for channel_id in bot_channel_ids:
+        channel = client.get_channel(channel_id)
+        response += f'{channel.guild} - #{channel.name}\n'
+    response += '\ntwitch notifications:\n'
+    for username, notify_channels in notify_twitcher_usernames.items():
+        for channel_id in notify_channels:
+            channel = client.get_channel(channel_id)
+            response += f'{username} - {channel.guild} - #{channel.name}\n'
+    response += '\nmoderators:\n'
+    for user_id in modlist:
+        user = client.get_user(user_id)
+        response += f'[{user.name}#{user.discriminator}]\n'
     await message.channel.send(
-        f"""uptime: {seconds_convert(floor(time.time() - start_time))}\n```css\n{response}\n```""")
+        f"""```css\n[uptime: {seconds_convert(floor(time.time() - start_time))}]\n{response}\n```""")
 
 
 @bot_command
@@ -314,32 +316,13 @@ async def on_message(message):
             return
 
 
-@client.event
-async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('--------------')
-    print(f'modlist:')
-    [print(client.get_user(user).name) for user in modlist]
-    print('--------------')
-    print(f'listening to:')
-    [print(f'{channel.guild} - #{channel.name}') for channel in
-     [client.get_channel(channel_id) for channel_id in bot_channel_ids]]
-    print('--------------')
-    print(f'stream notify:')
-    [print(f'{channel.guild} - #{channel.name}') for channel in
-     [client.get_channel(channel_id) for channel_id in notify_channel_ids]]
-
-
 class DiscordData:
 
     def __init__(self):
-        global bot_channel_ids, notify_channel_ids, modlist
+        global bot_channel_ids, modlist
         self.conn = sqlite3.connect('db/discord_data.db')
         self.c = self.conn.cursor()
         bot_channel_ids = [i[0] for i in self.get_channels()]
-        notify_channel_ids = [i[0] for i in self.get_notify_channels()]
         modlist = [i[0] for i in self.get_modlist()]
 
     def connect_channel(self, channel_id: int):
@@ -387,9 +370,23 @@ class StreamNotify(threading.Thread):
         self.requests_str = self.requests_str[:-1]
 
     def run(self):
+        while not client.is_ready():
+            time.sleep(1)
+        print('Logged in as')
+        print(client.user.name)
+        print(client.user.id)
+        print('--------------')
+        print(f'modlist:')
+        [print(client.get_user(user).name) for user in modlist]
+        print('--------------')
+        print(f'listening to:')
+        [print(f'{channel.guild} - #{channel.name}') for channel in
+         [client.get_channel(channel_id) for channel_id in bot_channel_ids]]
+        print('--------------')
+        print(f'stream notify:')
+        [print(f'[{k}] - {channel.guild} - #{channel.name}') for k, v in notify_twitcher_usernames.items() for
+         channel in [client.get_channel(x) for x in v]]
         if notify_enabled:
-            while not client.is_ready():
-                time.sleep(1)
             self.check_if_live()
 
     def check_if_live(self):
