@@ -2,7 +2,7 @@ import sqlite3
 
 conn = sqlite3.connect('db/discord_data.db')
 c = conn.cursor()
-tables = [{'channels': 'channel_id'}, {'notify': 'notify_channel_id'}, {'modlist': 'user_id'}]
+tables = [{'channels': 'channel_id'}, {'modlist': 'user_id'}]
 
 token = input('discord token?\n')
 client_id = input('twitch app client id?\n')
