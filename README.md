@@ -16,8 +16,7 @@ requests>=2.23.0
 
 ### tokens, channel/user ids
 
-run `token_setup.py` to add discord bot token, twitch app client id,  
-channel ids to listen and stream notify, user ids for bot moderators  
+run `token_setup.py` to add discord bot token, twitch app client id, channel ids to listen and stream notify, user ids for bot moderators  
 
 use `db/db_query.py` to execute sql queries  
 
@@ -39,7 +38,5 @@ notify_sleep_time(int, float) - twitch check interval in seconds
 
 moderators:  
 `nocolors` - delete all color roles  
-`channel <channel_id>` - bot will respond only in added channels,  
-add channel if <channel_id> not in database, remove if present  
-`notify <twitch_login> <discord_channel_id>` - twitch stream notify,  
-it will add stream if <discord_channel_id> not in database, remove if present, update if differs  
+`channel <channel_id>` - bot will respond only in added channels, add channel if <channel_id> not in database, remove if present  
+`notify <twitch_login> <discord_channel_id>` - twitch stream notify, it will add stream if <discord_channel_id> not in database, remove if present, update if differs  
