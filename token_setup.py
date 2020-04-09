@@ -10,6 +10,8 @@ client_id = input('twitch app client id?\n')
 with open('tokens', 'w') as f:
     f.write(f'discord_token {token}\n'
             f'client_id {client_id}')
+with conn:
+    c.execute(f'delete from notify')
 
 for table_dict in tables:
     for table, table_column in table_dict.items():
