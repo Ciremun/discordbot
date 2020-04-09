@@ -36,6 +36,7 @@ notify_sleep_time(int, float) - twitch check interval in seconds
 `color <#hex or rgb>` - get color role, replace if exists  
 `colors` - list created color roles  
 `info` - uptime, bot channels, modlist  
+
 moderators:  
 `nocolors` - delete all color roles  
 `channel <channel_id>` - bot will respond only in added channels,  
