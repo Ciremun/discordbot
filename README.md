@@ -22,11 +22,11 @@ use `db/db_query.py` to execute sql queries
 
 ## global variables
 
-color_roles_limit(int)  
-notify_enabled(bool)  
-stream_discord_embed_hex6(hex6 color str) - stream notification embed line color  
-prefix(str) - chat command prefix  
-notify_sleep_time(int, float) - twitch check interval in seconds  
+`color_roles_limit` (int)  
+`notify_enabled` (boolean)  
+`stream_discord_embed_hex6` (hex6 color string): stream notification embed line color  
+`prefix` (string):  chat command prefix  
+`notify_sleep_time` (numeric): twitch check interval in seconds  
 
 ## commands
 
