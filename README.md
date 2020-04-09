@@ -25,14 +25,20 @@ use `db/db_query.py` to execute sql queries
 
 color_roles_limit(int)  
 notify_enabled(bool)  
-notify_twitcher_usernames(list of strings) - twitch usernames to check   
 stream_discord_embed_hex6(hex6 color str) - stream notification embed line color  
 prefix(str) - chat command prefix  
 notify_sleep_time(int, float) - twitch check interval in seconds  
 
 ## commands
 
-everyone: color, nocolor, colorinfo, colors, help, info  
-bot moderators: channel, nocolors, notify, exit  
-
-see bot help for more info  
+`colorinfo <#hex or rgb>` - get color image  
+`nocolor` - remove color role  
+`color <#hex or rgb>` - get color role, replace if exists  
+`colors` - list created color roles  
+`info` - uptime, bot channels, modlist  
+moderators:  
+`nocolors` - delete all color roles  
+`channel <channel_id>` - bot will respond only in added channels,  
+add channel if <channel_id> not in database, remove if present  
+`notify <twitch_login> <discord_channel_id>` - twitch stream notify,  
+it will add stream if <discord_channel_id> not in database, remove if present, update if differs  
