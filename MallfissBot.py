@@ -327,10 +327,11 @@ async def info_command(message):
         for username, data in stream_notify.twitchers_dict.items():
             channel = client.get_channel(data['notify_channel'])
             response += f'[{username}] - {channel.guild} - #{channel.name}\n'
-    response += '\nmoderators:\n'
-    for user_id in modlist:
-        user = client.get_user(user_id)
-        response += f'[{user.name}#{user.discriminator}]\n'
+    if modlist:
+        response += '\nmoderators:\n'
+        for user_id in modlist:
+            user = client.get_user(user_id)
+            response += f'[{user.name}#{user.discriminator}]\n'
     await message.channel.send(
         f"""```css\n[uptime: {seconds_convert(floor(time.time() - start_time))}]\n{response}\n```""")
 
@@ -489,7 +490,7 @@ class StreamNotify(threading.Thread):
                         stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
                             self.twitchers_dict[username]['started_at']))
                         future = asyncio.run_coroutine_threadsafe(self.twitchers_dict[username]['notify_message'].edit(
-                            content=f"```fix\n[{username}] Stream ended, it lasted {stream_duration}```",
+                            content=f"```{random.choice(['fix', 'yaml', 'elm', 'apache', ''])}\n[{username}] Stream ended, it lasted {stream_duration}```",
                             embed=None), client.loop)
                         try:
                             future.result()
