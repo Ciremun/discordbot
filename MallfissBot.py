@@ -289,7 +289,9 @@ async def notify_command(message):
                 return
             db.remove_twitch_notify(twitch_login, notify_channel_id)
             del stream_notify.twitchers_dict[twitch_login]
-            stream_notify.requests_str = stream_notify.requests_str.replace(f'&user_login={twitch_login}', '')
+            stream_notify.requests_str = stream_notify.requests_str.replace(f'&user_login={twitch_login}', '').replace(
+                f'?user_login={twitch_login}', '').replace('https://api.twitch.tv/helix/streams&',
+                                                           'https://api.twitch.tv/helix/streams?')
             await message.channel.send(
                 f'{message.author.mention}, successfully removed {twitch_login} - '
                 f'{channel_object.guild} - {channel_object.mention} from notify')
@@ -300,7 +302,10 @@ async def notify_command(message):
                                                           'notify_message': None,
                                                           'started_at': '',
                                                           'notify_channel': notify_channel_id}
-            stream_notify.requests_str += f'&user_login={twitch_login}'
+            if stream_notify.requests_str == 'https://api.twitch.tv/helix/streams':
+                stream_notify.requests_str += f'?user_login={twitch_login}'
+            else:
+                stream_notify.requests_str += f'&user_login={twitch_login}'
             await message.channel.send(
                 f'{message.author.mention}, successfully added {twitch_login} - '
                 f'{channel_object.guild} - {channel_object.mention} to notify')
@@ -317,7 +322,7 @@ async def info_command(message):
     for channel_id in bot_channel_ids:
         channel = client.get_channel(channel_id)
         response += f'{channel.guild} - #{channel.name}\n'
-    if notify_enabled:
+    if notify_enabled and stream_notify.twitchers_dict:
         response += '\ntwitch notifications:\n'
         for username, data in stream_notify.twitchers_dict.items():
             channel = client.get_channel(data['notify_channel'])
@@ -468,6 +473,9 @@ class StreamNotify(threading.Thread):
 
     def check_if_live(self):
         while notify_enabled:
+            while self.requests_str == 'https://api.twitch.tv/helix/streams':
+                print('no twitch users to check, add stream with notify command')
+                time.sleep(15)
             channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
             for user_data in channels_data:
                 self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
