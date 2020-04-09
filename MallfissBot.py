@@ -333,14 +333,23 @@ async def help_command(message):
         f"""```css
 prefix={prefix}
 commands:
+
 colorinfo <#hex or rgb> - get color image
+
 nocolor - remove color role
+
 color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
+
 colors - list created color roles
+
 info - uptime, bot channels, modlist
+
 mod_commands:
+
 channel <channel_id> - bot will respond only in added channels, add channel if <channel_id> not in database, 
-remove if present nocolors - delete all color roles 
+remove if present
+nocolors - delete all color roles
+
 notify <twitch_login> <discord_channel_id> - twitch stream notify, it will add stream if <discord_channel_id> not in 
 database, remove if present, update if differs```""")
 
