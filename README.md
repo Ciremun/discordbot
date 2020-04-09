@@ -24,7 +24,7 @@ use `db/db_query.py` to execute sql queries
 
 `color_roles_limit` (int)  
 `notify_enabled` (boolean)  
-`stream_discord_embed_hex6` (hex6 color string): stream notification embed line color  
+`stream_discord_embed_hex6` (string): stream notification embed line color, six-digit HEX color  
 `prefix` (string):  chat command prefix  
 `notify_sleep_time` (numeric): twitch check interval in seconds  
 
