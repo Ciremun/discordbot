@@ -350,8 +350,7 @@ channel <channel_id> - bot will respond only in added channels, add channel if <
 remove if present
 nocolors - delete all color roles
 
-notify <twitch_login> <discord_channel_id> - twitch stream notify, it will add stream if <discord_channel_id> not in 
-database, remove if present, update if differs```""")
+notify <twitch_login> <discord_channel_id> - twitch stream notify, it will add stream if <discord_channel_id> not in database, remove if present, update if differs```""")
 
 
 @client.event
