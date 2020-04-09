@@ -291,7 +291,7 @@ async def notify_command(message):
             del stream_notify.twitchers_dict[twitch_login]
             stream_notify.requests_str = stream_notify.requests_str.replace(f'&user_login={twitch_login}', '')
             await message.channel.send(
-                f'{message.author.mention}, successfully removed '
+                f'{message.author.mention}, successfully removed {twitch_login} - '
                 f'{channel_object.guild} - {channel_object.mention} from notify')
         else:
             db.add_twitch_notify(twitch_login, notify_channel_id)
@@ -302,7 +302,7 @@ async def notify_command(message):
                                                           'notify_channel': notify_channel_id}
             stream_notify.requests_str += f'&user_login={twitch_login}'
             await message.channel.send(
-                f'{message.author.mention}, successfully added '
+                f'{message.author.mention}, successfully added {twitch_login} - '
                 f'{channel_object.guild} - {channel_object.mention} to notify')
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting [{messagesplit[2]}] to int')
