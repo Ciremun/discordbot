@@ -279,8 +279,11 @@ async def notify_command(message):
             if stream_notify.twitchers_dict[twitch_login]['notify_channel'] != notify_channel_id:
                 db.update_twitch_notify(twitch_login, stream_notify.twitchers_dict[twitch_login]['notify_channel'],
                                         notify_channel_id)
-                stream_notify.twitchers_dict[twitch_login]['notify_channel'] = notify_channel_id
-                stream_notify.twitchers_dict[twitch_login]['notify_sent'] = False
+                stream_notify.twitchers_dict[twitch_login] = {'notify_sent': False,
+                                                              'user_data': {},
+                                                              'notify_message': None,
+                                                              'started_at': '',
+                                                              'notify_channel': notify_channel_id}
                 await message.channel.send(f'{message.author.mention}, successfully updated {twitch_login} channel to '
                                            f'{channel_object.guild} - {channel_object.mention}')
                 return
