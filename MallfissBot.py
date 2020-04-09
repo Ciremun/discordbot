@@ -265,7 +265,7 @@ async def exit_command(message):
 async def notify_command(message):
     messagesplit = message.content.split()
     try:
-        twitch_login = messagesplit[1]
+        twitch_login = messagesplit[1].lower()
         if not 4 <= len(twitch_login) <= 25:
             await message.channel.send(f'{message.author.mention}, twitch login must be between 4 and 25 characters')
             return
@@ -478,14 +478,18 @@ class StreamNotify(threading.Thread):
                 time.sleep(15)
             channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
             for user_data in channels_data:
-                self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
+                try:
+                    self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
+                except KeyError:
+                    print(f'KeyError in StreamNotify, check_if_live: '
+                          f'double twitch names arent supported [{user_data["user_name"]}]')
             for username in self.twitchers_dict:
                 if not self.twitchers_dict[username]['user_data']:
                     if self.twitchers_dict[username]['notify_message']:
                         stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
                             self.twitchers_dict[username]['started_at']))
                         future = asyncio.run_coroutine_threadsafe(self.twitchers_dict[username]['notify_message'].edit(
-                            content=f'Stream ended, it lasted {stream_duration}',
+                            content=f"```fix\n[{username}] Stream ended, it lasted {stream_duration}```",
                             embed=None), client.loop)
                         try:
                             future.result()
