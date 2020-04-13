@@ -123,7 +123,7 @@ def hex_to_rgb(hex_color: str):
 
 
 def user_is_mod(message):
-    return bool(any(message.author.id == i for i in modlist))
+    return any(message.author.id == i for i in modlist)
 
 
 @mod_command
