@@ -208,11 +208,7 @@ async def color_command(message):
                 return
         await message.channel.send(f'{message.author.mention}, you have no color role')
         return
-    if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > color_roles_limit:
-        await message.channel.send(
-            f'{message.author.mention}, color roles limit reached, created color roles - !colors')
-        return
-    elif not re.match(rgb_hex_regex, color_code):
+    if not re.match(rgb_hex_regex, color_code):
         await message.channel.send(f'{message.author.mention}, color: #hex or rgb, example: #f542f2 or 245, 66, 242')
         return
     if re.match(rgb_regex, color_code):
@@ -238,6 +234,10 @@ async def color_command(message):
                         break
                 await message.author.add_roles(i)
                 return
+        if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > color_roles_limit:
+            await message.channel.send(
+                f'{message.author.mention}, color roles limit reached, created color roles - !colors')
+            return
         for role in message.author.roles:
             if re.match(hex_color_regex, role.name):
                 await message.author.remove_roles(role)
