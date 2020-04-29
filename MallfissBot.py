@@ -340,25 +340,16 @@ async def info_command(message):
 async def help_command(message):
     await message.channel.send(
         f"""```css
-prefix={prefix}
 commands:
-
 colorinfo <#hex or rgb> - get color image
-
 nocolor - remove color role
-
 color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
-
 colors - list created color roles
-
 info - uptime, bot channels, modlist
 
-mod_commands:
-
+mod commands:
 channel <channel_id> - bot will respond only in added channels, add channel if <channel_id> not in database, remove if present
-
 nocolors - delete all color roles
-
 notify <twitch_login> <discord_channel_id> - twitch stream notify, it will add stream if <discord_channel_id> not in database, remove if present, update if differs```""")
 
 
@@ -490,7 +481,7 @@ class StreamNotify(threading.Thread):
                         stream_duration = seconds_convert(time.time() - convert_utc_to_epoch(
                             self.twitchers_dict[username]['started_at']))
                         future = asyncio.run_coroutine_threadsafe(self.twitchers_dict[username]['notify_message'].edit(
-                            content=f"```{random.choice(['fix', 'yaml', 'elm', 'apache', ''])}\n[{username}] Stream ended, it lasted {stream_duration}```",
+                            content=f"```apache\n[{username}] Stream ended, it lasted {stream_duration}```",
                             embed=None), client.loop)
                         try:
                             future.result()
