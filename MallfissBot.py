@@ -488,7 +488,7 @@ class StreamNotify(threading.Thread):
                         except discord.errors.NotFound:
                             asyncio.run_coroutine_threadsafe(
                                 self.twitchers_dict[username]['notify_message'].channel.send
-                                (f'Stream ended, it lasted {stream_duration}'),
+                                (f"```apache\n[{username}] Stream ended, it lasted {stream_duration}```"),
                                 client.loop)
                         self.twitchers_dict[username]['notify_message'] = None
                     self.twitchers_dict[username]['notify_sent'] = False
