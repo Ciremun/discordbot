@@ -468,7 +468,11 @@ class StreamNotify(threading.Thread):
             while self.requests_str == 'https://api.twitch.tv/helix/streams':
                 print('no twitch users to check, add stream with notify command')
                 time.sleep(15)
-            channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
+            channels_data = []
+            try:
+                channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
+            except KeyError as e:
+                print(f'Exception in StreamNotify:\n{e}')
             for user_data in channels_data:
                 try:
                     self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
