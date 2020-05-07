@@ -16,7 +16,7 @@ requests>=2.23.0
 
 ### tokens, channel/user ids
 
-run `token_setup.py` to add discord bot token, twitch client id & oauth, channel ids to listen and stream notify, user ids for bot moderators  
+run `token_setup.py` to add discord bot token, twitch client id & helix api oauth, channel ids to listen and stream notify, user ids for bot moderators  
 
 
 ## global variables

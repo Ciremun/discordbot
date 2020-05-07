@@ -6,12 +6,12 @@ tables = [{'channels': 'channel_id'}, {'modlist': 'user_id'}]
 
 token = input('discord token?\n')
 client_id = input('twitch app client id?\n')
-twitch_oauth = input('twitch api oauth?\n')
+twitch_helix_oauth = input('twitch helix api oauth?\n')
 
 with open('tokens', 'w') as f:
     f.write(f'discord_token {token}\n'
             f'client_id {client_id}\n'
-            f'twitch_oauth {twitch_oauth}')
+            f'twitch_oauth {twitch_helix_oauth}')
 with conn:
     c.execute(f'delete from notify')
 
