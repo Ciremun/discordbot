@@ -19,7 +19,7 @@ prefix = '!'
 notify_sleep_time = 90
 
 start_time = time.time()
-TOKEN, client_id = [line.split()[1].rstrip() for line in open('tokens')]
+TOKEN, client_id, client_auth = [' '.join(line.split()[1:]) for line in open('tokens')]
 bot_channel_ids, modlist, commands_dict = [], [], {}
 hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
 hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
@@ -468,11 +468,12 @@ class StreamNotify(threading.Thread):
             while self.requests_str == 'https://api.twitch.tv/helix/streams':
                 print('no twitch users to check, add stream with notify command')
                 time.sleep(15)
-            channels_data = []
             try:
-                channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}'}).json()['data']
+                channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}',
+                                                                         'Authorization': f'{client_auth}'}).json()['data']
             except KeyError as e:
                 print(f'Exception in StreamNotify:\n{e}')
+                continue
             for user_data in channels_data:
                 try:
                     self.twitchers_dict[user_data['user_name'].lower()]['user_data'] = user_data
@@ -502,7 +503,7 @@ class StreamNotify(threading.Thread):
                             requests.get(
                                 f"https://api.twitch.tv/helix/games?id="
                                 f"{self.twitchers_dict[username]['user_data']['game_id']}",
-                                headers={"Client-ID": f'{client_id}'}).json()['data'][0]['name']
+                                headers={"Client-ID": f'{client_id}', 'Authorization': f'{client_auth}'}).json()['data'][0]['name']
                     except IndexError:
                         self.twitchers_dict[username]['user_data']['game'] = 'nothing xd'
                     embed = get_stream_discord_embed(self.twitchers_dict[username]['user_data'])
