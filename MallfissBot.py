@@ -28,22 +28,15 @@ rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)(
 client = discord.Client()
 
 
-def bot_command(func):
-    def wrapper(message, *args, **kwargs):
-        return func(message, *args, **kwargs)
-
-    commands_dict[func.__code__.co_name[:-8]] = wrapper
-    return wrapper
-
-
-def mod_command(func):
-    def wrapper(message, *args, **kwargs):
-        if not user_is_mod(message):
-            return
-        return func(message, *args, **kwargs)
-
-    commands_dict[func.__code__.co_name[:-8]] = wrapper
-    return wrapper
+def bot_command(*, name, check_func=None):
+    def decorator(func):
+        def wrapper(message):
+            if callable(check_func) and not check_func(message):
+                return False
+            return func(message)
+        commands_dict[name] = wrapper
+        return wrapper
+    return decorator
 
 
 def get_stream_discord_embed(channel_info: dict):
@@ -122,11 +115,11 @@ def hex_to_rgb(hex_color: str):
     return tuple(int(hex_color[i: i + 2], 16) for i in (0, 2, 4))
 
 
-def user_is_mod(message):
+def is_mod(message):
     return any(message.author.id == i for i in modlist)
 
 
-@mod_command
+@bot_command(name="channel", check_func=is_mod)
 async def channel_command(message):
     messagesplit = message.content.split()
     try:
@@ -154,7 +147,7 @@ async def channel_command(message):
         await message.channel.send(f'{message.author.mention}, no channel id')
 
 
-@bot_command
+@bot_command(name="colorinfo")
 async def colorinfo_command(message):
     messagesplit = message.content.split()
     color_code = ' '.join(messagesplit[1:])
@@ -181,14 +174,14 @@ async def colorinfo_command(message):
                                    file=discord.File(fp=image_binary, filename='image.png'))
 
 
-@mod_command
+@bot_command(name="nocolors", check_func=is_mod)
 async def nocolors_command(message):
     for role in message.guild.roles:
         if re.match(hex_color_regex, role.name):
             await role.delete()
 
 
-@bot_command
+@bot_command(name="nocolor")
 async def nocolor_command(message):
     for role in message.author.roles:
         if re.match(hex_color_regex, role.name):
@@ -197,7 +190,7 @@ async def nocolor_command(message):
     await message.channel.send(f'{message.author.mention}, you have no color role')
 
 
-@bot_command
+@bot_command(name="color")
 async def color_command(message):
     messagesplit = message.content.split()
     color_code = ' '.join(messagesplit[1:])
@@ -247,7 +240,7 @@ async def color_command(message):
         await message.author.add_roles(new_role)
 
 
-@bot_command
+@bot_command(name="colors")
 async def colors_command(message):
     colors_list = [role.mention for role in message.guild.roles if re.match(hex_color_regex, role.name)]
     if not colors_list:
@@ -256,12 +249,12 @@ async def colors_command(message):
     await message.channel.send(f'created color roles - {", ".join(colors_list)}')
 
 
-@mod_command
+@bot_command(name="exit", check_func=is_mod)
 async def exit_command(message):
     os._exit(0)
 
 
-@mod_command
+@bot_command(name="notify", check_func=is_mod)
 async def notify_command(message):
     messagesplit = message.content.split()
     try:
@@ -315,7 +308,7 @@ async def notify_command(message):
         await message.channel.send(f'{message.author.mention}, no twitch login / channel id')
 
 
-@bot_command
+@bot_command(name="info")
 async def info_command(message):
     response = ''
     response += 'listening to:\n'
@@ -336,7 +329,7 @@ async def info_command(message):
         f"""```css\n[uptime: {seconds_convert(floor(time.time() - start_time))}]\n{response}\n```""")
 
 
-@bot_command
+@bot_command(name="help")
 async def help_command(message):
     await message.channel.send(
         f"""```css
