@@ -1,25 +1,33 @@
 import discord
 import re
 import os
-from PIL import Image
 import io
 import sqlite3
 import asyncio
 import threading
 import requests
 import random
-from math import floor
-from datetime import datetime
+import json
 import time
 
-color_roles_limit = 50
-notify_enabled = True
-stream_discord_embed_hex6 = "#3498db"
-prefix = '!'
-notify_sleep_time = 90
+from PIL import Image
+from math import floor
+from datetime import datetime
+
+data = json.load(open('tokens.json'))
+
+color_roles_limit = data['rolesLimit']
+notify_enabled = data['notify']
+stream_discord_embed_hex6 = data['embedHex6']
+prefix = data['prefix']
+notify_sleep_time = data['notifySleep']
+TOKEN = data['DiscordToken']
+client_id = data['Client-ID']
+client_auth = data['ClientOAuth']
+
+del data
 
 start_time = time.time()
-TOKEN, client_id, client_auth = [' '.join(line.split()[1:]) for line in open('tokens')]
 bot_channel_ids, modlist, commands_dict = [], [], {}
 hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
 hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
@@ -463,7 +471,7 @@ class StreamNotify(threading.Thread):
                 time.sleep(15)
             try:
                 channels_data = requests.get(self.requests_str, headers={"Client-ID": f'{client_id}',
-                                                                         'Authorization': f'{client_auth}'}).json()['data']
+                                                                         'Authorization': f'Bearer {client_auth}'}).json()['data']
             except KeyError as e:
                 print(f'Exception in StreamNotify:\n{e}')
                 continue
@@ -496,7 +504,7 @@ class StreamNotify(threading.Thread):
                             requests.get(
                                 f"https://api.twitch.tv/helix/games?id="
                                 f"{self.twitchers_dict[username]['user_data']['game_id']}",
-                                headers={"Client-ID": f'{client_id}', 'Authorization': f'{client_auth}'}).json()['data'][0]['name']
+                                headers={"Client-ID": f'{client_id}', 'Authorization': f'Bearer {client_auth}'}).json()['data'][0]['name']
                     except IndexError:
                         self.twitchers_dict[username]['user_data']['game'] = 'nothing xd'
                     embed = get_stream_discord_embed(self.twitchers_dict[username]['user_data'])
