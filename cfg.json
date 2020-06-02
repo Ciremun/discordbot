@@ -1,0 +1,7 @@
+{
+    "rolesLimit": 50,
+    "notify": true,
+    "embedHex6": "#6441a5",
+    "prefix": "$",
+    "FlaskAppPort": 5001
+}

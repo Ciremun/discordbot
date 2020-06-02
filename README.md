@@ -1,5 +1,5 @@
 # shtcd discord bot
- 
+
 allows you to:  
 manage discord server color roles (create/assign/delete)  
 get twitch live notifications in discord announcement channels  
@@ -8,21 +8,18 @@ get twitch live notifications in discord announcement channels
 
 ### req.txt
 
-```
-discord>=1.0.1  
-Pillow>=7.0.0  
-requests>=2.23.0  
-```
+    discord>=1.0.1  
+    Pillow>=7.0.0  
+    requests>=2.23.0  
 
 ### tokens, channel/user ids
 
 run `token_setup.py` to add discord bot token, twitch client id & helix api oauth, channel ids to listen and stream notify, user ids for bot moderators  
 
+### global variables
 
-## global variables
-
-`color_roles_limit` (int)  
-`notify_enabled` (boolean)  
+`color_roles_limit` (int): guild color roles limit  
+`notify_enabled` (boolean): fetch and send notifications?  
 `stream_discord_embed_hex6` (string): stream notification embed line color, six-digit HEX color  
 `prefix` (string):  chat command prefix  
 `notify_sleep_time` (numeric): twitch check interval in seconds  
