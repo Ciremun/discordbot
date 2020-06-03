@@ -4,6 +4,8 @@ allows you to:
 manage discord server color roles (create/assign/delete)  
 get twitch live notifications in discord announcement channels  
 
+![image](image.png)
+
 ## Install
 
 ### req
@@ -19,7 +21,7 @@ run `setupdb.py` to add bot mods and clear db
 
 ### tokens.json
 
-create `tokens.json`:
+create `tokens.json`  
 
 `DiscordToken` (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
 `Client-ID` (str): twitch application Client ID, create app in [Twitch Developer Console](https://dev.twitch.tv/console/apps)  
