@@ -1,8 +1,8 @@
 import discord
 import io
 import time
-import globals as g
 
+from globals import client, cfg, startTime
 from decorators import bot_command
 from utils import is_mod, hex3_to_hex6, hex_to_rgb, rgb_to_hex, seconds_convert
 from database import db
@@ -16,16 +16,16 @@ async def help_command(message):
     await message.channel.send(
         f"""```css
 commands:
-colorinfo <#hex or rgb> - get color image
-nocolor - remove color role
+colorinfo <#hex or rgb> - get color image, rgb and hex
+nocolor - remove your color role
 color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
 colors - list created color roles
-info - uptime, bot channels, modlist
+info - uptime, channels, modlist
 
 mod commands:
-channel <channel_id> - bot will respond only in added channels, add channel if <channel_id> not in database, remove if present
+channel <channel_id> - bot will respond only in added channels (except mods), add if <channel_id> not in database, remove if present
 nocolors - delete all color roles
-notify <twitch_login> <discord_channel_id> - twitch stream notify, it will add stream if <discord_channel_id> not in database, remove if present, update if differs```""")
+notify <twitch login> <comma separated channel IDs> - twitch streams notify, add stream if <channel IDs> not in database, remove if present, update if differs```""")
 
 
 @bot_command(name="info")
@@ -33,24 +33,24 @@ async def info_command(message):
     response = ''
     response += 'listening to:\n'
     for channel_id in db.getBotChannels():
-        channel = g.client.get_channel(channel_id)
+        channel = client.get_channel(channel_id)
         response += f'{channel.guild} - #{channel.name}\n'
-    if g.cfg['notify']:
+    if cfg['notify']:
         streams = db.getStreams()
         if streams:
             response += '\ntwitch notifications:\n'
             for username, userdata in streams.items():
                 for channel in userdata['channels']:
-                    channel = g.client.get_channel(channel)
+                    channel = client.get_channel(channel)
                     response += f'[{username}] - {channel.guild} - #{channel.name}\n'
     modlist = db.getModlist()
     if modlist:
         response += '\nmoderators:\n'
         for user_id in modlist:
-            user = g.client.get_user(user_id)
+            user = client.get_user(user_id)
             response += f'[{user.name}#{user.discriminator}]\n'
     await message.channel.send(
-        f"""```css\n[uptime: {seconds_convert(time.time() - g.startTime)}]\n{response}\n```""")
+        f"""```css\n[uptime: {seconds_convert(time.time() - startTime)}]\n{response}\n```""")
 
 
 @bot_command(name="channel", check_func=is_mod)
@@ -62,7 +62,7 @@ async def channel_command(message):
                    channel.type == discord.ChannelType.text):
             await message.channel.send(f'{message.author.mention}, {target_channel} - unknown channel id')
             return
-        channel_object = g.client.get_channel(target_channel)
+        channel_object = client.get_channel(target_channel)
         if db.get_channel_by_id(target_channel):
             db.disconnect_channel(target_channel)
             await message.channel.send(
@@ -159,7 +159,7 @@ async def color_command(message):
                         break
                 await message.author.add_roles(i)
                 return
-        if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > g.cfg['rolesLimit']:
+        if len([role for role in message.guild.roles if re.match(hex_color_regex, role.name)]) > cfg['rolesLimit']:
             await message.channel.send(
                 f'{message.author.mention}, color roles limit reached, created color roles - !colors')
             return
@@ -190,6 +190,9 @@ async def notify_command(message):
             await message.channel.send(f'{message.author.mention}, twitch login must be between 4 and 25 characters')
             return
         notifyChannelIDsStr = ' '.join(messagesplit[2:])
+        if not notifyChannelIDsStr:
+            await message.channel.send(f'{message.author.mention}, no channel IDs')
+            return
         notifyChannelIDs = [int(x) for x in notifyChannelIDsStr.split(',')]
         for x in notifyChannelIDs:
             if not any(x == channel.id for channel in message.guild.channels if channel.type == discord.ChannelType.text):
@@ -212,9 +215,9 @@ async def notify_command(message):
             await message.channel.send(
                 f'{message.author.mention}, successfully removed {twitch_login} - {notifyChannelIDsStr} channels from notify')
     except ValueError:
-        await message.channel.send(f'{message.author.mention}, error converting [{messagesplit[2:]}] to int')
+        await message.channel.send(f'{message.author.mention}, error converting {messagesplit[2:]} to int')
     except IndexError:
-        await message.channel.send(f'{message.author.mention}, no twitch login / channel id')
+        await message.channel.send(f'{message.author.mention}, no twitch login')
 
 
 @bot_command(name="exit", check_func=is_mod)

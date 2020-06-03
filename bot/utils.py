@@ -130,6 +130,8 @@ async def processPostRequest(request):
                     except discord.errors.NotFound:
                         g.client.loop.create_task(message.channel.send(
                                 f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
+                    except Exception:
+                        logging.exception('e')
             else:                           # went live
                 streams[username]['notify_messages'] = []
                 streams[username]['user_data'] = request['json']['data'][0]
@@ -145,11 +147,14 @@ async def processPostRequest(request):
                 embed = discordEmbed(streams[username]['user_data'])
                 for channel in channels:
                     channel = g.client.get_channel(channel)
-                    message = await g.client.loop.create_task(channel.send(
-                            f'@everyone https://www.twitch.tv/{username} is live '
-                            f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                            embed=embed))
-                    streams[username]['notify_messages'].append(message)
+                    try:
+                        message = await g.client.loop.create_task(channel.send(
+                                f'@everyone https://www.twitch.tv/{username} is live '
+                                f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                                embed=embed))
+                        streams[username]['notify_messages'].append(message)
+                    except Exception:
+                        logging.exception('e')
     except Exception:
         logging.exception('e')
 
@@ -171,7 +176,7 @@ async def webhookStreamsRequest(username, mode, *, userid=None):
                             'hub.callback': f'{g.tokens["callbackURL"]}?u={username}', 
                             'hub.mode': mode, 
                             'hub.topic': f'https://api.twitch.tv/helix/streams?user_id={userid}', 
-                            'hub.lease_seconds': 360, 
+                            'hub.lease_seconds': 863000, 
                             'hub.secret': g.tokens["secret"]
                         })
     if r.content:
@@ -183,5 +188,5 @@ async def updateWebhooks():
     while True:
         for username, userdata in db.getStreams().items():
             await webhookStreamsRequest(username, 'subscribe', userid=userdata['userid'])
-        await asyncio.sleep(340) # 864000
+        await asyncio.sleep(860000) # 864000
 
