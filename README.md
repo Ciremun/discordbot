@@ -4,7 +4,7 @@ allows you to:
 manage discord server color roles (create/assign/delete)  
 get twitch live notifications in discord announcement channels  
 
-![image5](image5.png)
+![image](image.png)
 
 ## Install
 
