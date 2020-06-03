@@ -41,13 +41,13 @@ create `tokens.json`
 
 ## commands
 
-`colorinfo <#hex or rgb>` - get color image  
-`nocolor` - remove color role  
+`colorinfo <#hex or rgb>` - get color image, rgb and hex  
+`nocolor` - remove your color role  
 `color <#hex or rgb>` - get color role, replace if exists  
 `colors` - list created color roles  
-`info` - uptime, bot channels, modlist  
+`info` - uptime, channels, modlist  
 
 moderators:  
 `nocolors` - delete all color roles  
-`channel <channel_id>` - bot will respond only in added channels, add channel if <channel_id> not in database, remove if present  
-`notify <twitch_login> <discord_channel_id>` - twitch stream notify, it will add stream if <discord_channel_id> not in database, remove if present, update if differs  
+`channel <channel_id>` - bot will respond only in added channels (except mods), add if `<channel_id>` not in database, remove if present  
+`notify <twitch login> <comma separated channel IDs>` - twitch streams notify, add stream if `<channel IDs>` not in database, remove if present, update if differs  
