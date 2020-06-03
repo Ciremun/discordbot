@@ -22,12 +22,12 @@ run `setupdb.py` to add bot mods and clear db
 create `tokens.json`:
 
 `DiscordToken` (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
-`Client-ID`(str): twitch application Client ID, create app in [twitch dev console](https://dev.twitch.tv/console/apps)  
-`ClientSecret`(str): generate new secret in twitch dev console (under Client ID)  
-`ClientOAuth`(str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
-`AppAccessToken`(str): server OAuth token obtained with POST request using ClientID and ClientSecret: [OAuth client credentials flow](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
-`callbackURL`(str): server URL to catch webhook requests  
-`secret`(str): secret used to sign notification payloads  
+`Client-ID` (str): twitch application Client ID, create app in [twitch dev console](https://dev.twitch.tv/console/apps)  
+`ClientSecret` (str): generate new secret in twitch dev console (under Client ID)  
+`ClientOAuth` (str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
+`AppAccessToken` (str): server OAuth token obtained with POST request using ClientID and ClientSecret: [twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
+`callbackURL` (str): server URL to catch webhook requests  
+`secret` (str): secret used to sign notification payloads  
 
 ### cfg.json
 
