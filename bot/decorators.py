@@ -23,6 +23,7 @@ def exponentBackoff(func):
             try:
                 if await func(*args, **kwargs):
                     return
+                raise Exception
             except Exception:
                 logging.exception('e')
                 await asyncio.sleep(5 ** exponent)
