@@ -118,7 +118,7 @@ async def processPostRequest(request):
             channels = db.getStreams()[username]['channels']
             if not streams.get(username):
                 streams[username] = {}
-            if streams[username].get(notifyID) == notifyID: # check if same notification ID
+            if streams[username].get('notifyID') == notifyID: # check if same notification ID
                 return
             streams[username]['notifyID'] = notifyID
             if not request['json']['data']: # went offline
