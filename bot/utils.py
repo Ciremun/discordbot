@@ -117,11 +117,12 @@ async def processPostRequest(request):
             notifyID = request['notifyID']
             channels = db.getStreams()[username]['channels']
             if not streams.get(username):
-                streams[username] = {}
+                streams[username] = {'live': False}
             if streams[username].get('notifyID') == notifyID: # check if same notification ID
                 return
             streams[username]['notifyID'] = notifyID
-            if not request['json']['data']: # went offline
+            if not request['json']['data'] and streams[username]['live']: # went offline
+                streams[username]['live'] = False
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
                 for message in streams[username]['notify_messages']:
                     try:
@@ -132,7 +133,8 @@ async def processPostRequest(request):
                                 f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
                     except Exception:
                         logging.exception('e')
-            else:                           # went live
+            elif not streams[username]['live']:                           # went live
+                streams[username]['live'] = True
                 streams[username]['notify_messages'] = []
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
