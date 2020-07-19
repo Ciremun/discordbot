@@ -11,26 +11,44 @@ from PIL import Image
 from os import _exit
 
 
+@bot_command(name="mute", check_func=is_mod)
+async def mute_command(message):
+    mutedRole = discord.utils.get(message.guild.roles, name='Muted')
+    if not mutedRole:
+        await message.channel.send(f'{message.author.mention}, "Muted" role doesnt exist')
+        return
+    messagesplit = message.content.split()
+    targets = messagesplit[1:]
+    if not targets:
+        await message.channel.send(f'{message.author.mention}, no mute target')
+        return
+    for target in message.mentions + targets:
+        if isinstance(target, discord.Member):
+            member = target
+        else:
+            try:
+                member = discord.utils.get(message.guild.members, id=int(target))
+                if not member:
+                    await message.channel.send(f'{message.author.mention}, userID [{target}] not found')
+                    continue
+            except ValueError:
+                continue
+        for role in member.roles:
+            if role.id == mutedRole.id:
+                await member.remove_roles(mutedRole)
+                break
+        else:
+            await member.add_roles(mutedRole)
+
+
 @bot_command(name="help")
 async def help_command(message):
-    await message.channel.send(
-        f"""```css
-commands:
-colorinfo <#hex or rgb> - get color image, rgb and hex
-nocolor - remove your color role
-color <#hex or rgb> - get color role, replace if exists, example: #f542f2 or 245, 66, 242
-colors - list created color roles
-info - uptime, channels, modlist
-
-mod commands:
-channel <channel_id> - bot will respond only in added channels (except mods), add if <channel_id> not in database, remove if present
-nocolors - delete all color roles
-notify <twitch login> <comma separated channel IDs> - twitch streams notify, add stream if <channel IDs> not in database, remove if present, update if differs```""")
+    await message.channel.send("https://github.com/Ciremun/discordbot")
 
 
 @bot_command(name="info")
 async def info_command(message):
-    response = ''
+    response = '\n'
     response += 'listening to:\n'
     for channel_id in db.getBotChannels():
         channel = client.get_channel(channel_id)
@@ -49,8 +67,11 @@ async def info_command(message):
         for user_id in modlist:
             user = client.get_user(user_id)
             response += f'[{user.name}#{user.discriminator}]\n'
+    response += '\n'
+    if len(response) >= 2000:
+        response = ""
     await message.channel.send(
-        f"""```css\n[uptime: {seconds_convert(time.time() - startTime)}]\n{response}\n```""")
+        f"""```css\n[uptime: {seconds_convert(time.time() - startTime)}]{response}```""")
 
 
 @bot_command(name="channel", check_func=is_mod)
