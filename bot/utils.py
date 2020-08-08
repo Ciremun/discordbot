@@ -5,13 +5,32 @@ import discord
 import time
 import random
 import asyncio
+import sys
+import traceback
 import globals as g
 
 from decorators import exponentBackoff
 from database import db
 from math import floor
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+Path("log/").mkdir(exist_ok=True)
+
+fileHandler = RotatingFileHandler('log/latest.log', mode='a', maxBytes=5242880, backupCount=2)
+fileHandler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s:%(name)s:%(message)s'))
+logger.addHandler(fileHandler)
+
+def uncaughtExceptionHandler(etype, value, tb):
+    formatted_exception = ' '.join(traceback.format_exception(etype, value, tb))
+    print(formatted_exception)
+    logger.error(f"Uncaught exception: {formatted_exception}")
+
+sys.excepthook = uncaughtExceptionHandler
 
 streams = {}
 
@@ -98,13 +117,13 @@ async def validateAppAccessToken():
     response = requests.get('https://id.twitch.tv/oauth2/validate', 
                                 headers={'Authorization': f'OAuth {g.tokens["AppAccessToken"]}'}).json()
     if not g.tokens['Client-ID'] == response.get('client_id'):
-        print('invalid AppAccessToken, generating a new one')
+        logger.warning('invalid AppAccessToken, generating a new one')
         response = requests.post(f'https://id.twitch.tv/oauth2/token?'
                                           f'client_id={g.tokens["Client-ID"]}&'
                                           f'client_secret={g.tokens["ClientSecret"]}&'
                                           f'grant_type=client_credentials').json()
         g.tokens['AppAccessToken'] = response['access_token']
-        print(f'new AppAccessToken - {g.tokens["AppAccessToken"]}')
+        logger.info(f'new AppAccessToken - {g.tokens["AppAccessToken"]}')
 
 
 async def processPostRequest(request):
@@ -182,7 +201,7 @@ async def webhookStreamsRequest(username, mode, *, userid=None):
                             'hub.secret': g.tokens["secret"]
                         })
     if r.content:
-        print(r.content)
+        logger.info(f'r.content in webhookStreamsRequest:\n{r.content}')
         return
     return True
 

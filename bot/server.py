@@ -2,8 +2,9 @@ import threading
 import asyncio
 import re
 
-from utils import processPostRequest
+from utils import processPostRequest, logger
 from flask import Flask, request, Response
+from gevent.pywsgi import WSGIServer
 from globals import cfg, client
 
 
@@ -16,7 +17,8 @@ class FlaskApp(threading.Thread):
         self.start()
 
     def run(self):
-        self.app.run(host='0.0.0.0', port=cfg['FlaskAppPort'])
+        wsgi = WSGIServer(('0.0.0.0', cfg['FlaskAppPort']), self.app, error_log=logger)
+        wsgi.serve_forever()
 
     @staticmethod
     @app.route('/', methods=['GET', 'POST'])
