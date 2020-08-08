@@ -155,8 +155,6 @@ async def processPostRequest(request):
                         streams[username]['notify_messages'].append(message)
                     except Exception as e:
                         logger.error(e)
-            else:
-                logger.info(f'Ignore notification: {notifyID}')
     except Exception as e:
         logger.error(e)
 
