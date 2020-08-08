@@ -122,6 +122,8 @@ async def processPostRequest(request):
                 return
             streams[username]['notifyID'] = notifyID
             if not request['json']['data']: # went offline
+                if not streams[username].get('notify_messages'):
+                    return
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
                 for message in streams[username]['notify_messages']:
                     try:
