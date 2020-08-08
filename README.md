@@ -10,10 +10,11 @@ get twitch live notifications in discord announcement channels
 
 ### req
 
-    discord>=1.0.1  
-    Pillow>=7.0.0  
-    requests>=2.23.0  
-    Flask>=1.1.2  
+    discord.py>=1.4.0
+    Pillow>=7.2.0
+    requests>=2.24.0
+    Flask>=1.1.2
+    gevent>=20.6.2
 
 Tested on Python 3.7.5
 

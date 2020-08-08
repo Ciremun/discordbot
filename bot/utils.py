@@ -1,36 +1,17 @@
 import hmac
 import requests
-import logging
 import discord
 import time
 import random
 import asyncio
-import sys
-import traceback
 import globals as g
 
 from decorators import exponentBackoff
+from log import logger
 from database import db
 from math import floor
 from datetime import datetime
-from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-Path("log/").mkdir(exist_ok=True)
-
-fileHandler = RotatingFileHandler('log/latest.log', mode='a', maxBytes=5242880, backupCount=2)
-fileHandler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s:%(name)s:%(message)s'))
-logger.addHandler(fileHandler)
-
-def uncaughtExceptionHandler(etype, value, tb):
-    formatted_exception = ' '.join(traceback.format_exception(etype, value, tb))
-    print(formatted_exception)
-    logger.error(f"Uncaught exception: {formatted_exception}")
-
-sys.excepthook = uncaughtExceptionHandler
 
 streams = {}
 
@@ -136,12 +117,11 @@ async def processPostRequest(request):
             notifyID = request['notifyID']
             channels = db.getStreams()[username]['channels']
             if not streams.get(username):
-                streams[username] = {'live': False}
+                streams[username] = {}
             if streams[username].get('notifyID') == notifyID: # check if same notification ID
                 return
             streams[username]['notifyID'] = notifyID
-            if not request['json']['data'] and streams[username]['live']: # went offline
-                streams[username]['live'] = False
+            if not request['json']['data']: # went offline
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
                 for message in streams[username]['notify_messages']:
                     try:
@@ -150,10 +130,9 @@ async def processPostRequest(request):
                     except discord.errors.NotFound:
                         g.client.loop.create_task(message.channel.send(
                                 f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
-                    except Exception:
-                        logging.exception('e')
-            elif not streams[username]['live']:                           # went live
-                streams[username]['live'] = True
+                    except Exception as e:
+                        logger.error(e)
+            elif request['json']['data']:    # went live
                 streams[username]['notify_messages'] = []
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
@@ -174,10 +153,12 @@ async def processPostRequest(request):
                                 f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                                 embed=embed))
                         streams[username]['notify_messages'].append(message)
-                    except Exception:
-                        logging.exception('e')
-    except Exception:
-        logging.exception('e')
+                    except Exception as e:
+                        logger.error(e)
+            else:
+                logger.info(f'Ignore notification: {notifyID}')
+    except Exception as e:
+        logger.error(e)
 
 
 @exponentBackoff

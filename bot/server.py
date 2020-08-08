@@ -2,7 +2,8 @@ import threading
 import asyncio
 import re
 
-from utils import processPostRequest, logger
+from utils import processPostRequest
+from log import logger
 from flask import Flask, request, Response
 from gevent.pywsgi import WSGIServer
 from globals import cfg, client

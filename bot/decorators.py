@@ -1,7 +1,8 @@
-import logging
 import asyncio
 import threading
 import globals as g
+
+from log import logger
 
 
 lock = threading.Lock()
@@ -24,8 +25,8 @@ def exponentBackoff(func):
                 if await func(*args, **kwargs):
                     return
                 raise Exception
-            except Exception:
-                logging.exception('e')
+            except Exception as e:
+                logger.error(e)
                 await asyncio.sleep(5 ** exponent)
     return wrapper
 
