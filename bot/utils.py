@@ -132,7 +132,7 @@ async def processPostRequest(request):
                                 f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
                     except Exception as e:
                         logger.error(e)
-            elif request['json']['data']:    # went live
+            else:                           # went live
                 streams[username]['notify_messages'] = []
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
