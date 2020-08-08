@@ -118,13 +118,15 @@ async def processPostRequest(request):
             channels = db.getStreams()[username]['channels']
             if not streams.get(username):
                 streams[username] = {}
+                streams[username]['notify_messages'] = []
             if streams[username].get('notifyID') == notifyID: # check if same notification ID
                 return
             streams[username]['notifyID'] = notifyID
             if not request['json']['data']: # went offline
-                if not streams[username].get('notify_messages'):
+                if not streams[username]['notify_messages']:
                     return
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
+                sent_notifications = []
                 for message in streams[username]['notify_messages']:
                     try:
                         await g.client.loop.create_task(message.edit(
@@ -134,9 +136,11 @@ async def processPostRequest(request):
                                 f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
                     except Exception as e:
                         logger.error(e)
-                streams[username]['notify_messages'].clear()
+                    sent_notifications.append(message)
+                for message in sent_notifications:
+                    streams[username]['notify_messages'].remove(message)
+                sent_notifications.clear()
             else:                           # went live
-                streams[username]['notify_messages'] = []
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
                     streams[username]['user_data']['game'] = \
