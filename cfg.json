@@ -1,5 +1,5 @@
 {
-    "rolesLimit": 50,
+    "rolesLimit": 100,
     "notify": true,
     "embedHex6": "#6441a5",
     "prefix": "!",
