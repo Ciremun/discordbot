@@ -117,12 +117,12 @@ async def processPostRequest(request):
             notifyID = request['notifyID']
             channels = db.getStreams()[username]['channels']
             if not streams.get(username):
-                streams[username] = {}
-                streams[username]['notify_messages'] = []
+                streams[username] = {'live': None, 'notify_messages': []}
             if streams[username].get('notifyID') == notifyID: # check if same notification ID
                 return
             streams[username]['notifyID'] = notifyID
-            if not request['json']['data']: # went offline
+            if not request['json']['data'] and streams[username]['live']:      # went offline
+                streams[username]['live'] = False
                 if not streams[username]['notify_messages']:
                     return
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
@@ -140,7 +140,8 @@ async def processPostRequest(request):
                 for message in sent_notifications:
                     streams[username]['notify_messages'].remove(message)
                 sent_notifications.clear()
-            else:                           # went live
+            elif request['json']['data'] and not streams[username]['live']:  # went live
+                streams[username]['live'] = True
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
                     streams[username]['user_data']['game'] = \
