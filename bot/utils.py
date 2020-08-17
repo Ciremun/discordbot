@@ -115,15 +115,17 @@ async def processPostRequest(request):
             global streams
             username = request['args']['u']
             notifyID = request['notifyID']
-            channels = db.getStreams()[username]['channels']
             if not streams.get(username):
                 streams[username] = {'live': None, 'notify_messages': []}
             if streams[username].get('notifyID') == notifyID: # check if same notification ID
+                logger.debug(f'duplicate ID {username} - {notifyID}')
                 return
             streams[username]['notifyID'] = notifyID
             if not request['json']['data'] and streams[username]['live']:      # went offline
+                logger.debug(f'{username} went offline, ID {streams[username]["notifyID"]}')
                 streams[username]['live'] = False
                 if not streams[username]['notify_messages']:
+                    logger.debug(f'no notify_messages {username}')
                     return
                 duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
                 sent_notifications = []
@@ -141,6 +143,7 @@ async def processPostRequest(request):
                     streams[username]['notify_messages'].remove(message)
                 sent_notifications.clear()
             elif request['json']['data'] and not streams[username]['live']:  # went live
+                logger.debug(f'{username} went live, ID {streams[username]["notifyID"]}')
                 streams[username]['live'] = True
                 streams[username]['user_data'] = request['json']['data'][0]
                 try:
@@ -153,6 +156,7 @@ async def processPostRequest(request):
                 except IndexError:
                     streams[username]['user_data']['game'] = 'nothing xd'
                 embed = discordEmbed(streams[username]['user_data'])
+                channels = db.getStreams()[username]['channels']
                 for channel in channels:
                     channel = g.client.get_channel(channel)
                     try:
@@ -188,7 +192,7 @@ async def webhookStreamsRequest(username, mode, *, userid=None):
                             'hub.secret': g.tokens["secret"]
                         })
     if r.content:
-        logger.info(f'r.content in webhookStreamsRequest:\n{r.content}')
+        logger.warning(f'r.content in webhookStreamsRequest:\n{r.content}')
         return
     return True
 
