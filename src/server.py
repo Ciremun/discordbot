@@ -34,6 +34,5 @@ def result():
         }), client.loop)
     return Response(status=200)
 
-
 serverThread = Thread(target=run)
 serverThread.start()

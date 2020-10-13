@@ -1,8 +1,8 @@
 {
-    "prefix": "$",
+    "prefix": "!",
     "rolesLimit": 100,
     "notify": true,
-    "FlaskAppPort": 5001,
+    "FlaskAppPort": 80,
     "embedHex6": "#6441a5",
-    "footerText": "hehe xd"
+    "footerText": "poggers"
 }
