@@ -93,8 +93,7 @@ async def channel_command(message):
     messagesplit = message.content.split()
     try:
         target_channel = int(messagesplit[1])
-        if not any(target_channel == channel.id for channel in message.guild.channels if
-                   channel.type == discord.ChannelType.text):
+        if not client.get_channel(target_channel):
             await message.channel.send(f'{message.author.mention}, {target_channel} - unknown channel id')
             return
         channel_object = client.get_channel(target_channel)
