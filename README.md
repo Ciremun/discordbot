@@ -16,29 +16,30 @@ get twitch live notifications in discord announcement channels
     Flask>=1.1.2
     gevent>=20.6.2
 
-Tested on Python 3.7.5
+Tested on Python 3.7/3.8
 
-run `setupdb.py` to add bot mods and clear db  
+run `setupdb.py` to add bot mods    
 
-### tokens.json
+### keys.json
 
-create `tokens.json`  
+create `keys.json`  
 
-`DiscordToken` (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
-`Client-ID` (str): twitch application Client ID, create app in [Twitch Developer Console](https://dev.twitch.tv/console/apps)  
-`ClientSecret` (str): generate new secret in twitch dev console (under Client ID)  
-`ClientOAuth` (str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
+`DiscordToken`   (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
+`Client-ID`      (str): twitch application Client ID, create app in [Twitch Developer Console](https://dev.twitch.tv/console/apps)  
+`ClientSecret`   (str): generate new secret in twitch dev console (under Client ID)  
+`ClientOAuth`    (str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
 `AppAccessToken` (str): server OAuth token obtained with POST request using ClientID and ClientSecret: [Twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
-`callbackURL` (str): server URL to catch webhook requests  
-`secret` (str): secret used to sign notification payloads  
+`callbackURL`    (str): server URL to catch webhook requests  
+`secret`         (str): secret used to sign notification payloads  
 
 ### cfg.json
 
-`rolesLimit` (int): guild color roles limit  
-`notify` (boolean): fetch and send notifications?  
-`embedHex6` (string): stream notification embed line color, six-digit HEX color  
-`prefix` (str): bot command prefix  
+`prefix`       (str): bot command prefix  
+`rolesLimit`   (int): guild color roles limit  
+`notify`       (bool): fetch and send notifications? 
 `FlaskAppPort` (int): server port, `80` for http  
+`embedHex6`    (str): stream notification embed line color, six-digit HEX color  
+`footerText`   (str): "hehe xd"  
 
 ## commands
 
@@ -48,8 +49,8 @@ create `tokens.json`
 `colors` - list created color roles  
 `info` - uptime, channels, modlist  
 
-moderators:  
+### moderators
 `nocolors` - delete all color roles  
 `channel <channel_id>` - bot will respond only in added channels (except mods), add if `<channel_id>` not in database, remove if present  
-`notify <twitch login> <comma separated channel IDs>` - twitch streams notify, add stream if `<channel IDs>` not in database, remove if present, update if differs  
+`notify <twitch login> <space separated channel IDs>` - twitch streams notify, add stream if `<channel IDs>` not in database, remove if present, update if differs  
 `mute <space separated mentions/userIDs>` - add/remove "Muted" role, you have to create role, edit channel permissions before using it  

@@ -1,8 +1,7 @@
 
 if __name__ == '__main__':
-    import sys
-    import os
-    from os.path import realpath
-    sys.path.append(realpath('bot/'))
-    import bot.commands
-    import bot.client
+    from src.config import cfg, keys
+    if cfg['notify']:
+        import src.server
+    from src.client import client
+    client.run(keys['DiscordToken'])

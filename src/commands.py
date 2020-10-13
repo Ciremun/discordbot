@@ -1,14 +1,28 @@
-import discord
 import io
 import time
-
-from globals import client, cfg, startTime
-from decorators import bot_command
-from utils import is_mod, hex3_to_hex6, hex_to_rgb, rgb_to_hex, seconds_convert
-from database import db
-from regex import *
-from PIL import Image
+import re
 from os import _exit
+
+import discord
+from PIL import Image
+
+import src.db as db
+from .config import cfg, start_time
+from .utils import is_mod, hex3_to_hex6, hex_to_rgb, rgb_to_hex, seconds_convert, webhookStreamsRequest
+from .regex import hex_color_regex, hex3_color_regex, rgb_regex, rgb_hex_regex
+from .client import client
+
+commands = {}
+
+def bot_command(*, name, check_func=None):
+    def decorator(func):
+        def wrapper(message):
+            if callable(check_func) and not check_func(message):
+                return False
+            return func(message)
+        commands[name] = wrapper
+        return wrapper
+    return decorator
 
 
 @bot_command(name="mute", check_func=is_mod)
@@ -43,18 +57,18 @@ async def mute_command(message):
 
 @bot_command(name="help")
 async def help_command(message):
-    await message.channel.send("https://github.com/Ciremun/discordbot")
+    await message.channel.send("https://github.com/Ciremun/discordbot/blob/master/README.md")
 
 
 @bot_command(name="info")
 async def info_command(message):
     response = '\n'
     response += 'listening to:\n'
-    for channel_id in db.getBotChannels():
+    for channel_id in db.get_bot_channels():
         channel = client.get_channel(channel_id)
         response += f'{channel.guild} - #{channel.name}\n'
     if cfg['notify']:
-        streams = db.getStreams()
+        streams = db.get_streams()
         if streams:
             response += '\ntwitch notifications:\n'
             for username, userdata in streams.items():
@@ -68,10 +82,10 @@ async def info_command(message):
             user = client.get_user(user_id)
             response += f'[{user.name}#{user.discriminator}]\n'
     response += '\n'
-    if len(response) >= 2000:
+    if len(response) > 2000:
         response = ""
     await message.channel.send(
-        f"""```css\n[uptime: {seconds_convert(time.time() - startTime)}]{response}```""")
+        f"""```css\n[uptime: {seconds_convert(time.time() - start_time)}]{response}```""")
 
 
 @bot_command(name="channel", check_func=is_mod)
@@ -87,12 +101,12 @@ async def channel_command(message):
         if db.get_channel_by_id(target_channel):
             db.disconnect_channel(target_channel)
             await message.channel.send(
-                f'{message.author.mention}, successfully removed '
+                f'{message.author.mention}, removed '
                 f'{channel_object.guild} - {channel_object.mention} from listen')
         else:
             db.connect_channel(target_channel)
             await message.channel.send(
-                f'{message.author.mention}, successfully added '
+                f'{message.author.mention}, added '
                 f'{channel_object.guild} - {channel_object.mention} to listen')
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting [{messagesplit[1]}] to int')
@@ -214,27 +228,28 @@ async def notify_command(message):
         if not notifyChannelIDsStr:
             await message.channel.send(f'{message.author.mention}, no channel IDs')
             return
-        notifyChannelIDs = [int(x) for x in notifyChannelIDsStr.split(',')]
+        notifyChannelIDs = [int(x) for x in notifyChannelIDsStr.split()]
         for x in notifyChannelIDs:
-            if not any(x == channel.id for channel in message.guild.channels if channel.type == discord.ChannelType.text):
+            if not client.get_channel(x):
                 await message.channel.send(f'{message.author.mention}, {x} - unknown channel id')
-                return
         data = db.getNotifyChannelsByName(twitch_login)
         if not data:
             db.addNotify(twitch_login, notifyChannelIDsStr)
+            client.loop.create_task(webhookStreamsRequest(twitch_login, 'subscribe'))
             await message.channel.send(
-                f'{message.author.mention}, successfully added {twitch_login} - {notifyChannelIDsStr} channels to notify')
+                f'{message.author.mention}, added {twitch_login} - {notifyChannelIDsStr} channels to notify')
             return
         channels, userid = data[0]
         if channels:
             if notifyChannelIDsStr.strip() !=  channels.strip():
                 db.updateNotifyChannels(twitch_login, channels, notifyChannelIDsStr, userid=userid)
-                await message.channel.send(f'{message.author.mention}, successfully updated {twitch_login} channels to '
+                await message.channel.send(f'{message.author.mention}, updated {twitch_login} channels to '
                                            f'{notifyChannelIDsStr}')
                 return
             db.removeNotify(twitch_login, notifyChannelIDsStr, userid=userid)
+            client.loop.create_task(webhookStreamsRequest(twitch_login, 'unsubscribe', userid=userid))
             await message.channel.send(
-                f'{message.author.mention}, successfully removed {twitch_login} - {notifyChannelIDsStr} channels from notify')
+                f'{message.author.mention}, removed {twitch_login} - {notifyChannelIDsStr} channels from notify')
     except ValueError:
         await message.channel.send(f'{message.author.mention}, error converting {messagesplit[2:]} to int')
     except IndexError:

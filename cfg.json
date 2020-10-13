@@ -1,7 +1,8 @@
 {
+    "prefix": "$",
     "rolesLimit": 100,
     "notify": true,
+    "FlaskAppPort": 5001,
     "embedHex6": "#6441a5",
-    "prefix": "!",
-    "FlaskAppPort": 80
+    "footerText": "hehe xd"
 }
