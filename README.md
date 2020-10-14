@@ -39,7 +39,7 @@ create `keys.json`
 `notify`       (bool): fetch and send notifications? 
 `FlaskAppPort` (int): server port, `80` for http  
 `embedHex6`    (str): stream notification embed line color, six-digit HEX color  
-`footerText`   (str): "hehe xd"  
+`footerText`   (str): stream notification embed footer text  
 
 ## commands
 
