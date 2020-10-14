@@ -36,7 +36,7 @@ create `keys.json`
 
 `prefix`       (str): bot command prefix  
 `rolesLimit`   (int): guild color roles limit  
-`notify`       (bool): fetch and send notifications? 
+`notify`       (bool): fetch and send notifications?  
 `FlaskAppPort` (int): server port, `80` for http  
 `embedHex6`    (str): stream notification embed line color, six-digit HEX color  
 `footerText`   (str): stream notification embed footer text  
