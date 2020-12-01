@@ -80,7 +80,10 @@ async def info_command(message):
         response += '\nmoderators:\n'
         for user_id in modlist:
             user = client.get_user(user_id)
-            response += f'[{user.name}#{user.discriminator}]\n'
+            if not user:
+                response += f'[userid:{user_id}]\n'
+            else:
+                response += f'[{user.name}#{user.discriminator}]\n'
     response += '\n'
     if len(response) > 2000:
         response = ""
