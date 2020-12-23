@@ -4,5 +4,4 @@ __pycache__/
 bot/__pycache__/
 keys.json
 log/
-__init__.py
 discord.db
