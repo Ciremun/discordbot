@@ -2,7 +2,7 @@ import sqlite3
 
 from .decorators import acquireLock
 
-conn = sqlite3.connect('discord.db', check_same_thread=False, isolation_level=None)
+conn = sqlite3.connect('discordbot.db', check_same_thread=False, isolation_level=None)
 cursor = conn.cursor()
 tables = [
 "CREATE TABLE IF NOT EXISTS channels (id integer PRIMARY KEY, channel_id integer NOT NULL)",
