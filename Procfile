@@ -1,1 +1,1 @@
-web: python setupdb.py 353223800692670464 & gunicorn task_list:'create_app()' & python ping_self.py
+web: python setupdb.py 353223800692670464 & python main.py & python ping_self.py
