@@ -1,1 +1,1 @@
-web: python main.py & python ping_self.py
+web: python setupdb.py 353223800692670464 & python main.py & python ping_self.py
