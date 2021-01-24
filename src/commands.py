@@ -25,6 +25,15 @@ def bot_command(*, name, check_func=None):
     return decorator
 
 
+@bot_command(name="exec", check_func=is_mod)
+async def exec_command(message):
+    try:
+        code = '\n'.join(message.content.split('\n')[2:])[:-3]
+        exec(code)
+    except Exception as e:
+        await message.channel.send(f'{e}')
+
+
 @bot_command(name="mute", check_func=is_mod)
 async def mute_command(message):
     mutedRole = discord.utils.get(message.guild.roles, name='Muted')

@@ -1,5 +1,5 @@
 {
-    "prefix": "!",
+    "prefix": "$$",
     "rolesLimit": 100,
     "notify": true,
     "FlaskAppPort": 80,

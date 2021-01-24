@@ -1,7 +1,9 @@
 .idea/
 .vscode/
-__pycache__/
-bot/__pycache__/
 keys.json
 log/
-discord.db
+discordbot.db
+venv/
+.env
+*.pyc
+__pycache__/
