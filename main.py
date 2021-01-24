@@ -4,4 +4,5 @@ if __name__ == '__main__':
     if cfg['notify']:
         import src.server
     from src.client import client
+    print('run bot')
     client.run(keys['DiscordToken'])

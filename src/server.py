@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 def run():
     wsgi = WSGIServer(('0.0.0.0', int(os.environ.get('PORT'))), app)
+    print('run server')
     wsgi.serve_forever()
 
 
