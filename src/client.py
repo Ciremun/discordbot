@@ -17,8 +17,14 @@ if cfg['notify']:
     client.loop.create_task(updateWebhooks())
 
 @client.event
+async def on_ready(*args, **kwargs):
+    print('bot ready')
+
+@client.event
 async def on_message(message):
     from .commands import commands
+
+    print(f'message: {message.content}')
 
     if message.author == client.user or (not is_mod(message) and not any(message.channel.id == i for i in db.get_bot_channels())):
         return
