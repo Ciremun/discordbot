@@ -14,7 +14,7 @@ from .client import client, processPostRequest
 app = Flask(__name__)
 
 def run():
-    wsgi = WSGIServer(('0.0.0.0', os.environ.get('PORT')), app)
+    wsgi = WSGIServer(('0.0.0.0', int(os.environ.get('PORT'))), app)
     wsgi.serve_forever()
 
 
