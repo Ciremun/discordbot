@@ -10,19 +10,17 @@ get twitch live notifications in discord announcement channels
 
 ### req
 
+Python 3
+
     discord.py>=1.4.0
     Pillow>=7.2.0
     requests>=2.24.0
     Flask>=1.1.2
     gevent>=20.6.2
 
-Tested on Python 3.7/3.8
+### env
 
-run `setupdb.py` to add bot mods    
-
-### keys.json
-
-create `keys.json`  
+set env vars
 
 `DiscordToken`   (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
 `Client-ID`      (str): twitch application Client ID, create app in [Twitch Developer Console](https://dev.twitch.tv/console/apps)  
@@ -30,14 +28,15 @@ create `keys.json`
 `ClientOAuth`    (str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
 `AppAccessToken` (str): server OAuth token obtained with POST request using ClientID and ClientSecret: [Twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
 `callbackURL`    (str): server URL to catch webhook requests  
-`secret`         (str): secret used to sign notification payloads  
+`secret`         (str): secret used to sign notification payloads
+`PORT`           (int): flask application port
+`DEFAULT_MODERATOR_ID` (int): default bot moderator
 
 ### cfg.json
 
 `prefix`       (str): bot command prefix  
 `rolesLimit`   (int): guild color roles limit  
 `notify`       (bool): fetch and send notifications?  
-`FlaskAppPort` (int): server port, `80` for http  
 `embedHex6`    (str): stream notification embed line color, six-digit HEX color  
 `footerText`   (str): stream notification embed footer text  
 
