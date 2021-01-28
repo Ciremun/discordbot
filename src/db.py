@@ -18,11 +18,8 @@ for create_table_query in tables:
 default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
 if default_moderator_id is not None:
     cursor.execute('SELECT 1 FROM modlist')
-    result = cursor.fetchone()
-    print(f'db mods: {result}')
-    if not result:
-        print(f'add mod {int(default_moderator_id)}')
-        cursor.execute('INSERT INTO modlist (user_id) VALUES (?)', int(default_moderator_id))
+    if not cursor.fetchone():
+        cursor.execute('INSERT INTO modlist (user_id) VALUES (:user_id)', {'user_id': int(default_moderator_id)})
 
 def get_streams():
     return {uname: {'userid': uid, 'channels': [int(x) for x in channels.split()]} 
