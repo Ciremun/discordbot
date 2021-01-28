@@ -1,5 +1,7 @@
+import os
 import sqlite3
 
+import src.config
 from .decorators import acquireLock
 
 conn = sqlite3.connect('discordbot.db', check_same_thread=False, isolation_level=None)
@@ -9,8 +11,15 @@ tables = [
 "CREATE TABLE IF NOT EXISTS modlist (id integer PRIMARY KEY, user_id integer NOT NULL)",
 "CREATE TABLE IF NOT EXISTS notify (id integer PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
 ]
+
 for create_table_query in tables:
     cursor.execute(create_table_query)
+
+default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
+if default_moderator is not None:
+    cursor.execute('SELECT count(id) FROM modlist')
+    if not cursor.fetchone():
+        cursor.execute('INSERT INTO modlist (user_id) VALUES (?)', int(default_moderator_id))
 
 def get_streams():
     return {uname: {'userid': uid, 'channels': [int(x) for x in channels.split()]} 
