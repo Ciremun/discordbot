@@ -24,8 +24,6 @@ async def on_ready(*args, **kwargs):
 async def on_message(message):
     from .commands import commands
 
-    print(f'message: {message.content}')
-
     if message.author == client.user or (not is_mod(message) and not any(message.channel.id == i for i in db.get_bot_channels())):
         return
 
@@ -51,11 +49,11 @@ async def on_guild_channel_delete(channel):
         try:
             newChannels.remove(channel.id)
             if not newChannels:
-                db.removeNotify(username, ', '.join(channels), userid=userid)
+                db.removeNotify(username, ' '.join(channels), userid=userid)
                 client.loop.create_task(webhookStreamsRequest(username, 'unsubscribe', userid=userid))
                 continue
             newChannels = [str(x) for x in newChannels]
-            db.updateNotifyChannels(username, ', '.join(channels), ', '.join(newChannels), userid=userid)
+            db.updateNotifyChannels(username, ' '.join(channels), ' '.join(newChannels), userid=userid)
         except ValueError:
             pass
 
