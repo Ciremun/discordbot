@@ -17,7 +17,7 @@ for create_table_query in tables:
 
 default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
 if default_moderator_id is not None:
-    cursor.execute('SELECT count(id) FROM modlist')
+    cursor.execute('SELECT 1 FROM modlist')
     result = cursor.fetchone()
     print(f'db mods: {result}')
     if not result:
