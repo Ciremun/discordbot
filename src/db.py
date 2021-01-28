@@ -16,7 +16,7 @@ for create_table_query in tables:
     cursor.execute(create_table_query)
 
 default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
-if default_moderator is not None:
+if default_moderator_id is not None:
     cursor.execute('SELECT count(id) FROM modlist')
     if not cursor.fetchone():
         cursor.execute('INSERT INTO modlist (user_id) VALUES (?)', int(default_moderator_id))
