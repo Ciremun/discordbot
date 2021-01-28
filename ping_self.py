@@ -11,5 +11,5 @@ load_dotenv(join(dirname(__name__), '.env'))
 self_url = os.environ.get('callbackURL')
 
 while True:
-    time.sleep(randrange(8, 28) * 60)
+    time.sleep(randrange(8, 20) * 60)
     requests.get(self_url)
