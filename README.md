@@ -25,22 +25,29 @@ configure twitch live notifications in discord announcement channels
 
 ### cfg.json
 
-`prefix`       (str): bot command prefix  
-`rolesLimit`   (int): guild color roles limit  
-`notify`       (bool): fetch and send notifications?  
-`embedHex6`    (str): stream notification embed line color, six-digit HEX color  
-`footerText`   (str): stream notification embed footer text  
+|     Key      |  Type  |                         Value                              |
+|--------------|--------|------------------------------------------------------------|
+| `prefix`     | `str`  | bot command prefix                                         |
+| `embedHex6`  | `str`  | stream notification embed line color, six-digit HEX color  |
+| `footerText` | `str`  | stream notification embed footer text                      |
+| `rolesLimit` | `int`  | guild color roles limit                                    |
+| `notify`     | `bool` | fetch and send notifications?                              |
 
 ## commands
 
-`colorinfo <#hex or rgb>` - get color image, rgb and hex  
-`nocolor` - remove your color role  
-`color <#hex or rgb>` - get color role, replace if exists  
-`colors` - list created color roles  
-`info` - uptime, channels, modlist  
+|          Command          |            Description            |
+|---------------------------|-----------------------------------|
+| `colorinfo <#hex or rgb>` | get color image, rgb and hex      |
+| `nocolor`                 | remove your color role            |
+| `color <#hex or rgb>`     | get color role, replace if exists |
+| `colors`                  | list created color roles          |
+| `info`                    | uptime, channels, modlist         |
 
 ### moderators
-`nocolors` - delete all color roles  
-`channel <channel_id>` - add/remove bot channel  
-`notify <twitch username> <space separated channel IDs>` -  add/remove/update twitch streams notify  
-`mute <space separated mentions/userIDs>` - add/remove "Muted" role  
+
+|                       Command                           |               Description               |
+|---------------------------------------------------------|-----------------------------------------|
+|`nocolors`                                               | delete all color roles                  |
+|`channel <channel_id>`                                   | add/remove bot channel                  |
+|`notify <twitch username> <space separated channel IDs>` | add/remove/update twitch streams notify | 
+|`mute <space separated mentions/userIDs>`                | add/remove "Muted" role                 | 
