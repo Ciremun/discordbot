@@ -11,8 +11,8 @@ get twitch live notifications in discord announcement channels
 
 ### env
 
-|       Variable       | Type |   Value
-|----------------------|-----   |----------------------------------------------------------------------------------------------|
+|       Variable       |  Type  |                                        Value
+|----------------------|--------|----------------------------------------------------------------------------------------------|
 |`DISCORD_TOKEN`       | `str`  | discord bot token, [discord developer portal](https://discord.com/developers)                |
 |`CLIENT_ID`           | `str`  | twitch application Client ID, create app in [twitch developer console](https://dev.twitch.tv/console/apps)                                                                                           |  
 |`CLIENT_SECRET`       | `str`  | generate new secret in twitch dev console (under Client ID)                                  |
