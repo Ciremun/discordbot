@@ -1,7 +1,7 @@
 # shtcd discord bot
 
-manage discord server color roles (create/assign/delete)  
-get twitch live notifications in discord announcement channels  
+create, assign, delete discord server color roles  
+configure twitch live notifications in discord announcement channels  
 
 ![image](image.png)
 
@@ -41,6 +41,6 @@ get twitch live notifications in discord announcement channels
 
 ### moderators
 `nocolors` - delete all color roles  
-`channel <channel_id>` - bot will respond only in added channels (except mods), add if `<channel_id>` not in database, remove if present  
-`notify <twitch login> <space separated channel IDs>` - twitch streams notify, add stream if `<channel IDs>` not in database, remove if present, update if differs  
-`mute <space separated mentions/userIDs>` - add/remove "Muted" role, you have to create role, edit channel permissions before using it  
+`channel <channel_id>` - add/remove bot channel  
+`notify <twitch username> <space separated channel IDs>` -  add/remove/update twitch streams notify  
+`mute <space separated mentions/userIDs>` - add/remove "Muted" role  
