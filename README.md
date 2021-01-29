@@ -1,6 +1,5 @@
 # shtcd discord bot
 
-allows you to:  
 manage discord server color roles (create/assign/delete)  
 get twitch live notifications in discord announcement channels  
 
@@ -8,29 +7,21 @@ get twitch live notifications in discord announcement channels
 
 ## Install
 
-### req
-
-Python 3
-
-    discord.py>=1.4.0
-    Pillow>=7.2.0
-    requests>=2.24.0
-    Flask>=1.1.2
-    gevent>=20.6.2
+[Python 3](https://www.python.org/)
 
 ### env
 
-set env vars
-
-`DiscordToken`   (str): discord bot token, [Discord Developer Portal](https://discord.com/developers)  
-`Client-ID`      (str): twitch application Client ID, create app in [Twitch Developer Console](https://dev.twitch.tv/console/apps)  
-`ClientSecret`   (str): generate new secret in twitch dev console (under Client ID)  
-`ClientOAuth`    (str): user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain  
-`AppAccessToken` (str): server OAuth token obtained with POST request using ClientID and ClientSecret: [Twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
-`callbackURL`    (str): server URL to catch webhook requests  
-`secret`         (str): secret used to sign notification payloads
-`PORT`           (int): flask application port
-`DEFAULT_MODERATOR_ID` (int): default bot moderator
+|       Variable       | Type |   Value
+|----------------------|-----   |----------------------------------------------------------------------------------------------|
+|`DISCORD_TOKEN`       | `str`  | discord bot token, [discord developer portal](https://discord.com/developers)                |
+|`CLIENT_ID`           | `str`  | twitch application Client ID, create app in [twitch developer console](https://dev.twitch.tv/console/apps)                                                                                           |  
+|`CLIENT_SECRET`       | `str`  | generate new secret in twitch dev console (under Client ID)                                  |
+|`CLIENT_OAUTH`        | `str`  | user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain                |
+|`APP_ACCESS_TOKEN`    | `str`  | server OAuth token [twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
+|`CALLBACK_URL`        | `str`  | server URL to catch webhook requests                                                         |
+|`SECRET`              | `str`  | secret used to sign notification payloads                                                    |
+|`PORT`                | `int`  | flask application port                                                                       |
+|`DEFAULT_MODERATOR_ID`| `int`  | default bot moderator                                                                        |
 
 ### cfg.json
 
