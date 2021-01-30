@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv(join(dirname(__name__), '.env'))
 
-self_url = os.environ.get('callbackURL')
+self_url = os.environ.get('CALLBACK_URL')
 
 while True:
     time.sleep(randrange(8, 20) * 60)

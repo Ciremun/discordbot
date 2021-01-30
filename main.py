@@ -5,4 +5,4 @@ if __name__ == '__main__':
         import src.server
     from src.client import client
     print('run bot')
-    client.run(keys['DiscordToken'])
+    client.run(keys['DISCORD_TOKEN'])

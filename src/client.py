@@ -85,7 +85,7 @@ def randomGuildEmote(guild_id: int) -> Optional[int]:
 
 async def processPostRequest(request):
     alg, sign = request['X-Hub-Signature'].split('=')
-    xHub = hmac.new(keys['secret'].encode(), request['bytes'], alg).hexdigest() # recompute hash to validate notification
+    xHub = hmac.new(keys['SECRET'].encode(), request['bytes'], alg).hexdigest() # recompute hash to validate notification
     if xHub == sign:
         global streams
         username = request['args']['u']
@@ -125,8 +125,8 @@ async def processPostRequest(request):
                 streams[username]['user_data']['game'] = \
                     requests.get(f"https://api.twitch.tv/helix/games?id={streams[username]['user_data']['game_id']}",
                                     headers={
-                                        "Client-ID": keys['Client-ID'], 
-                                        'Authorization': f'Bearer {keys["ClientOAuth"]}'
+                                        "Client-ID": keys['CLIENT_ID'], 
+                                        'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'
                                         }).json()['data'][0]['name']
             except:
                 streams[username]['user_data']['game'] = 'nothing xd'

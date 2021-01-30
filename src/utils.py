@@ -61,15 +61,15 @@ def is_mod(message):
 
 async def validateAppAccessToken():
     response = requests.get('https://id.twitch.tv/oauth2/validate', 
-                                headers={'Authorization': f'OAuth {keys["AppAccessToken"]}'}).json()
-    if not keys['Client-ID'] == response.get('client_id'):
-        logger.warning('invalid AppAccessToken, generating a new one')
+                                headers={'Authorization': f'OAuth {keys["APP_ACCESS_TOKEN"]}'}).json()
+    if not keys['CLIENT_ID'] == response.get('client_id'):
+        logger.warning('invalid APP_ACCESS_TOKEN, generating a new one')
         response = requests.post(f'https://id.twitch.tv/oauth2/token?'
-                                          f'client_id={keys["Client-ID"]}&'
-                                          f'client_secret={keys["ClientSecret"]}&'
+                                          f'client_id={keys["CLIENT_ID"]}&'
+                                          f'client_secret={keys["CLIENT_OAUTH"]}&'
                                           f'grant_type=client_credentials').json()
-        keys['AppAccessToken'] = response['access_token']
-        logger.info(f'new AppAccessToken - {keys["AppAccessToken"]}')
+        keys['APP_ACCESS_TOKEN'] = response['access_token']
+        logger.info(f'new APP_ACCESS_TOKEN - {keys["APP_ACCESS_TOKEN"]}')
 
 
 @exponentBackoff
@@ -77,22 +77,22 @@ async def webhookStreamsRequest(username, mode, *, userid=None):
     print('webhookStreamsRequest')
     if userid is None:
         response = requests.get(f'https://api.twitch.tv/helix/users?login={username}', 
-                                    headers={'Client-ID': keys["Client-ID"], 
-                                                'Authorization': f'Bearer {keys["ClientOAuth"]}'}).json()
+                                    headers={'Client-ID': keys["CLIENT_ID"], 
+                                                'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'}).json()
         userid = response['data'][0]['id']
         print(f'user id: {userid}')
         db.addNotifyUserID(username, userid)
     await validateAppAccessToken()
     r = requests.post('https://api.twitch.tv/helix/webhooks/hub', 
-                        headers={'Client-ID': keys["Client-ID"], 
-                                    'Authorization': f'Bearer {keys["AppAccessToken"]}'
+                        headers={'Client-ID': keys["CLIENT_ID"], 
+                                    'Authorization': f'Bearer {keys["APP_ACCESS_TOKEN"]}'
                                 }, 
                         data={
-                            'hub.callback': f'{keys["callbackURL"]}?u={username}', 
+                            'hub.callback': f'{keys["CALLBACK_URL"]}?u={username}', 
                             'hub.mode': mode, 
                             'hub.topic': f'https://api.twitch.tv/helix/streams?user_id={userid}', 
                             'hub.lease_seconds': 863000, 
-                            'hub.secret': keys["secret"]
+                            'hub.secret': keys["SECRET"]
                         })
     print(f'webhookStreamsRequest status: {r.status_code}: {r.text}')
     if r.content:
