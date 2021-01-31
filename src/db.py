@@ -9,9 +9,9 @@ conn.autocommit = True
 cursor = conn.cursor()
 
 tables = [
-    "CREATE TABLE IF NOT EXISTS channels (id integer PRIMARY KEY, channel_id bigint NOT NULL)",
-    "CREATE TABLE IF NOT EXISTS modlist (id integer PRIMARY KEY, user_id bigint NOT NULL)",
-    "CREATE TABLE IF NOT EXISTS notify (id integer PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
+    "CREATE TABLE IF NOT EXISTS channels (id SERIAL PRIMARY KEY, channel_id bigint NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS modlist (id SERIAL PRIMARY KEY, user_id bigint NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS notify (id SERIAL PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
 ]
 
 for create_table_query in tables:
