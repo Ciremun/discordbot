@@ -87,17 +87,17 @@ def updateNotifyChannels(username: str, channels: str, newChannels: str, userid=
     if userid is None:
         cursor.execute(
             'UPDATE notify SET channels = %s WHERE username = %s and channels = %s '
-            'and userid IS NULL', (username, channels, newChannels))
+            'and userid IS NULL', (newChannels, username, channels))
         return
     cursor.execute(
         'UPDATE notify SET channels = %s WHERE username = %s and channels = %s '
-        'and userid = %s', (username, channels, newChannels, userid))
+        'and userid = %s', (newChannels, username, channels, userid))
 
 
 @acquireLock
 def addNotifyUserID(username: str, userid: int):
     cursor.execute(
-        'UPDATE notify SET userid = %s WHERE username = %s and userid IS NULL', (username, userid))
+        'UPDATE notify SET userid = %s WHERE username = %s and userid IS NULL', (userid, username))
 
 
 def getNotifyChannelsByName(username: str):
