@@ -1,11 +1,13 @@
 import os
-import sqlite3
+import psycopg2
 
 import src.config
 from .decorators import acquireLock
 
-conn = sqlite3.connect('discordbot.db', check_same_thread=False, isolation_level=None)
+conn = psycopg2.connect(os.environ.get('DATABASE_URL'), sslmode='require')
+conn.autocommit = True
 cursor = conn.cursor()
+
 tables = [
 "CREATE TABLE IF NOT EXISTS channels (id integer PRIMARY KEY, channel_id integer NOT NULL)",
 "CREATE TABLE IF NOT EXISTS modlist (id integer PRIMARY KEY, user_id integer NOT NULL)",
