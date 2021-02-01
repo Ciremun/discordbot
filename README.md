@@ -22,6 +22,7 @@ configure twitch live notifications in discord announcement channels
 |`SECRET`              | `str`  | secret used to sign notification payloads                                                    |
 |`PORT`                | `int`  | flask application port                                                                       |
 |`DEFAULT_MODERATOR_ID`| `int`  | default bot moderator                                                                        |
+| `DATABASE_URL`       | `str`  | postgres [connection URIs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
 
 ### cfg.json
 
