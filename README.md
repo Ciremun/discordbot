@@ -19,10 +19,10 @@ configure twitch live notifications in discord announcement channels
 |`CLIENT_OAUTH`        | `str`  | user OAuth token, [twitchapps](https://twitchapps.com/tokengen/) helps obtain                |
 |`APP_ACCESS_TOKEN`    | `str`  | server OAuth token [twitch docs](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-client-credentials-flow)  
 |`CALLBACK_URL`        | `str`  | server URL to catch webhook requests                                                         |
+| `DATABASE_URL`       | `str`  | postgres [connection URI](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
 |`SECRET`              | `str`  | secret used to sign notification payloads                                                    |
 |`PORT`                | `int`  | flask application port                                                                       |
 |`DEFAULT_MODERATOR_ID`| `int`  | default bot moderator                                                                        |
-| `DATABASE_URL`       | `str`  | postgres [connection URIs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
 
 ### cfg.json
 
