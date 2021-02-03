@@ -118,6 +118,8 @@ async def processPostRequest(request):
             sent_notifications = []
             for message in streams[username]['notify_messages']:
                 try:
+                    channel = client.get_channel(message['channel'])
+                    message = await channel.fetch_message(message['message'])
                     await client.loop.create_task(message.edit(
                         content=f"```apache\n[{username}] Stream ended, it lasted {duration}```", embed=None))
                 except discord.errors.NotFound:
@@ -153,7 +155,7 @@ async def processPostRequest(request):
                     f'@everyone https://www.twitch.tv/{username} is live '
                     f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                     embed=embed))
-                streams[username]['notify_messages'].append(message)
+                streams[username]['notify_messages'].append({'channel': message.channel.id, 'message': message.id})
         db.update_streams_state(streams)
         return True
     return
