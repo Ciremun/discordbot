@@ -6,6 +6,7 @@ import psycopg2
 
 conn = None
 cursor = None
+lock = threading.Lock()
 
 
 def db_connect():
@@ -18,7 +19,7 @@ def db_connect():
 
 
 def db(func: Callable) -> Callable:
-    lock = threading.Lock()
+    global lock
 
     def wrapper(*args, **kwargs) -> Any:
         try:
