@@ -5,6 +5,8 @@ from typing import Callable, Any, Dict, Tuple
 
 import psycopg2
 
+from .log import logger
+
 conn = None
 cursor = None
 lock = threading.Lock()
@@ -27,6 +29,7 @@ def db(func: Callable) -> Callable:
             lock.acquire(True)
             return func(*args, **kwargs)
         except psycopg2.OperationalError:
+            logger.info('try reconnect')
             db_connect()
             return func(*args, **kwargs)
         finally:
@@ -142,9 +145,11 @@ def getNotifyChannelsByName(username: str):
 def update_streams_state(streams: Dict):
     cursor.execute('SELECT 1 FROM streams_state')
     if cursor.fetchone():
+        logger.info('UPDATE streams_state')
         cursor.execute('UPDATE streams_state SET streams = %s',
                        (json.dumps(streams),))
     else:
+        logger.info('INSERT INTO streams_state')
         cursor.execute(
             'INSERT INTO streams_state (streams) VALUES (%s)', (json.dumps(streams),))
 
@@ -152,6 +157,7 @@ def update_streams_state(streams: Dict):
 @db
 def get_streams_state() -> Tuple[Dict]:
     cursor.execute('SELECT streams FROM streams_state')
+    logger.info('get_streams_state')
     return cursor.fetchone() or ({},)
 
 

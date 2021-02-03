@@ -102,6 +102,7 @@ async def processPostRequest(request):
         # check if same notification ID
         if streams[username].get('notifyID') == notifyID:
             logger.debug(f'duplicate ID {username} - {notifyID}')
+            db.update_streams_state(streams)
             return
         streams[username]['notifyID'] = notifyID
         if not request['json']['data'] and streams[username]['live']:      # went offline
@@ -110,6 +111,7 @@ async def processPostRequest(request):
             streams[username]['live'] = False
             if not streams[username]['notify_messages']:
                 logger.debug(f'no notify_messages {username}')
+                db.update_streams_state(streams)
                 return
             duration = seconds_convert(
                 time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
