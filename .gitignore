@@ -1,9 +1,7 @@
 .idea/
 .vscode/
-keys.json
+.venv/
 log/
-discordbot.db
-venv/
 .env
 *.pyc
 __pycache__/

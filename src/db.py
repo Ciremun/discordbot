@@ -1,28 +1,49 @@
 import os
+import threading
+from typing import Callable, Any
+
 import psycopg2
 
-import src.config
-from .decorators import acquireLock
+conn = None
+cursor = None
 
-conn = psycopg2.connect(os.environ.get('DATABASE_URL'), sslmode='require')
-conn.autocommit = True
-cursor = conn.cursor()
+def db_connect():
+    global conn, cursor
+    conn = psycopg2.connect(os.environ.get('DATABASE_URL'), sslmode='require')
+    conn.autocommit = True
+    cursor = conn.cursor()
 
-tables = [
-    "CREATE TABLE IF NOT EXISTS channels (id SERIAL PRIMARY KEY, channel_id bigint NOT NULL)",
-    "CREATE TABLE IF NOT EXISTS modlist (id SERIAL PRIMARY KEY, user_id bigint NOT NULL)",
-    "CREATE TABLE IF NOT EXISTS notify (id SERIAL PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
-]
+def db(func: Callable) -> Callable:
+    lock = threading.Lock()
+    def wrapper(*args, **kwargs) -> Any:
+        try:
+            lock.acquire(True)
+            return func(*args, **kwargs)
+        except psycopg2.OperationalError:
+            db_connect()
+            return func(*args, **kwargs)
+        finally:
+            lock.release()
+    wrapper.__name__ = func.__name__
+    return wrapper
 
-for create_table_query in tables:
-    cursor.execute(create_table_query)
+def db_init():
 
-default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
-if default_moderator_id is not None:
-    cursor.execute('SELECT 1 FROM modlist')
-    if not cursor.fetchone():
-        cursor.execute('INSERT INTO modlist (user_id) VALUES (%s)',
-                       (int(default_moderator_id),))
+    tables = [
+        "CREATE TABLE IF NOT EXISTS channels (id SERIAL PRIMARY KEY, channel_id bigint NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS modlist (id SERIAL PRIMARY KEY, user_id bigint NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS notify (id SERIAL PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
+    ]
+
+    for create_table_query in tables:
+        cursor.execute(create_table_query)
+
+    default_moderator_id = os.environ.get('DEFAULT_MODERATOR_ID')
+    if default_moderator_id is not None:
+        cursor.execute('SELECT 1 FROM modlist')
+        if not cursor.fetchone():
+            cursor.execute('INSERT INTO modlist (user_id) VALUES (%s)',
+                        (int(default_moderator_id),))
 
 
 def get_streams():
@@ -30,49 +51,49 @@ def get_streams():
             for uname, uid, channels in get_twitch_notify()}
 
 
-@acquireLock
+@db
 def connect_channel(channel_id: int):
     cursor.execute(
         'INSERT INTO channels (channel_id) VALUES (%s)', (channel_id,))
 
 
-@acquireLock
+@db
 def disconnect_channel(channel_id: int):
     cursor.execute('DELETE FROM channels WHERE channel_id = %s', (channel_id,))
 
 
-@acquireLock
+@db
 def get_bot_channels():
     cursor.execute('SELECT channel_id FROM channels')
     return [i[0] for i in cursor.fetchall()]
 
 
-@acquireLock
+@db
 def get_channel_by_id(channel_id: int):
     cursor.execute(
         'SELECT channel_id FROM channels WHERE channel_id = %s', (channel_id,))
     return cursor.fetchall()
 
 
-@acquireLock
+@db
 def get_twitch_notify():
     cursor.execute('SELECT username, userid, channels FROM notify')
     return cursor.fetchall()
 
 
-@acquireLock
+@db
 def getModlist():
     cursor.execute('SELECT user_id FROM modlist')
     return [i[0] for i in cursor.fetchall()]
 
 
-@acquireLock
+@db
 def addNotify(username: str, channels: str):
     cursor.execute(
         'INSERT INTO notify (username, channels) VALUES (%s, %s)', (username, channels))
 
 
-@acquireLock
+@db
 def removeNotify(username: str, channels: str, userid=None):
     if userid is None:
         cursor.execute(
@@ -82,7 +103,7 @@ def removeNotify(username: str, channels: str, userid=None):
         'DELETE FROM notify WHERE username = %s and channels = %s and userid = %s', (username, channels, userid))
 
 
-@acquireLock
+@db
 def updateNotifyChannels(username: str, channels: str, newChannels: str, userid=None):
     if userid is None:
         cursor.execute(
@@ -94,7 +115,7 @@ def updateNotifyChannels(username: str, channels: str, newChannels: str, userid=
         'and userid = %s', (newChannels, username, channels, userid))
 
 
-@acquireLock
+@db
 def addNotifyUserID(username: str, userid: int):
     cursor.execute(
         'UPDATE notify SET userid = %s WHERE username = %s and userid IS NULL', (userid, username))
@@ -104,3 +125,6 @@ def getNotifyChannelsByName(username: str):
     cursor.execute(
         'SELECT channels, userid FROM notify WHERE username = %s', (username,))
     return cursor.fetchall()
+
+db_connect()
+db_init()

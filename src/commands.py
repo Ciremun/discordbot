@@ -9,10 +9,13 @@ from PIL import Image
 import src.db as db
 from .config import cfg, start_time
 from .utils import is_mod, hex3_to_hex6, hex_to_rgb, rgb_to_hex, seconds_convert, webhookStreamsRequest
-from .regex import hex_color_regex, hex3_color_regex, rgb_regex, rgb_hex_regex
 from .client import client
 
 commands = {}
+hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
+hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
+rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
+rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
 
 def bot_command(*, name, check_func=None):
     def decorator(func):

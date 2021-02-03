@@ -6,10 +6,20 @@ from datetime import datetime
 import requests
 
 import src.db as db
-from .decorators import exponentBackoff
 from .log import logger
-from .config import keys, cfg
+from .config import keys
 
+def exponentBackoff(func):
+    async def wrapper(*args, **kwargs):
+        for exponent in range(1, 6):
+            try:
+                if await func(*args, **kwargs):
+                    return
+                raise Exception
+            except Exception as e:
+                logger.error(e)
+                await asyncio.sleep(5 ** exponent)
+    return wrapper
 
 def new_timecode_explicit(days, hours, minutes, seconds, duration):
     if duration < 1:
