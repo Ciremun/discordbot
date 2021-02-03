@@ -1,6 +1,7 @@
 import os
 import threading
-from typing import Callable, Any
+import json
+from typing import Callable, Any, Dict, Tuple
 
 import psycopg2
 
@@ -40,7 +41,8 @@ def db_init():
     tables = [
         "CREATE TABLE IF NOT EXISTS channels (id SERIAL PRIMARY KEY, channel_id bigint NOT NULL)",
         "CREATE TABLE IF NOT EXISTS modlist (id SERIAL PRIMARY KEY, user_id bigint NOT NULL)",
-        "CREATE TABLE IF NOT EXISTS notify (id SERIAL PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)"
+        "CREATE TABLE IF NOT EXISTS notify (id SERIAL PRIMARY KEY, username text NOT NULL, userid integer, channels text NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS streams_state (id SERIAL PRIMARY KEY, streams json NOT NULL)"
     ]
 
     for create_table_query in tables:
@@ -129,10 +131,28 @@ def addNotifyUserID(username: str, userid: int):
         'UPDATE notify SET userid = %s WHERE username = %s and userid IS NULL', (userid, username))
 
 
+@db
 def getNotifyChannelsByName(username: str):
     cursor.execute(
         'SELECT channels, userid FROM notify WHERE username = %s', (username,))
     return cursor.fetchall()
+
+
+@db
+def update_streams_state(streams: Dict):
+    cursor.execute('SELECT 1 FROM streams_state')
+    if cursor.fetchone():
+        cursor.execute('UPDATE streams_state SET streams = %s',
+                       (json.dumps(streams),))
+    else:
+        cursor.execute(
+            'INSERT INTO streams_state (streams) VALUES (%s)', (json.dumps(streams),))
+
+
+@db
+def get_streams_state() -> Tuple[Dict]:
+    cursor.execute('SELECT streams FROM streams_state')
+    return cursor.fetchone() or ({},)
 
 
 db_connect()

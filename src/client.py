@@ -12,7 +12,7 @@ from .utils import is_mod, updateWebhooks, seconds_convert, convert_utc_to_epoch
 from .log import logger
 
 client = discord.Client()
-streams = {}
+streams = db.get_streams_state()[0]
 if cfg['notify']:
     client.loop.create_task(updateWebhooks())
 
@@ -152,5 +152,6 @@ async def processPostRequest(request):
                     f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                     embed=embed))
                 streams[username]['notify_messages'].append(message)
+        db.update_streams_state(streams)
         return True
     return
