@@ -14,7 +14,9 @@ def exponentBackoff(func: Callable) -> Callable:
     async def wrapper(*args, **kwargs):
         for exponent in range(1, 6):
             try:
-                assert await func(*args, **kwargs)
+                if await func(*args, **kwargs):
+                    return
+                raise Exception
             except Exception as e:
                 logger.error(e)
                 await asyncio.sleep(5 ** exponent)
