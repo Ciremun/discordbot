@@ -16,9 +16,11 @@ streams = {}
 if cfg['notify']:
     client.loop.create_task(updateWebhooks())
 
+
 @client.event
 async def on_ready(*args, **kwargs):
     logger.info('bot ready')
+
 
 @client.event
 async def on_message(message):
@@ -50,10 +52,12 @@ async def on_guild_channel_delete(channel):
             newChannels.remove(channel.id)
             if not newChannels:
                 db.removeNotify(username, ' '.join(channels), userid=userid)
-                client.loop.create_task(webhookStreamsRequest(username, 'unsubscribe', userid=userid))
+                client.loop.create_task(webhookStreamsRequest(
+                    username, 'unsubscribe', userid=userid))
                 continue
             newChannels = [str(x) for x in newChannels]
-            db.updateNotifyChannels(username, ' '.join(channels), ' '.join(newChannels), userid=userid)
+            db.updateNotifyChannels(username, ' '.join(
+                channels), ' '.join(newChannels), userid=userid)
         except ValueError:
             pass
 
@@ -69,9 +73,11 @@ def discordEmbed(channel_info: dict) -> discord.Embed:
     embed.add_field(name='Stream started',
                     value=f'{seconds_convert(time.time() - convert_utc_to_epoch(channel_info["started_at"]))} ago')
     embed.set_footer(text=cfg['footerText'])
-    random_emote_id = randomGuildEmote(random.choice([guild.id for guild in client.guilds]))
+    random_emote_id = randomGuildEmote(
+        random.choice([guild.id for guild in client.guilds]))
     if random_emote_id:
-        embed.set_image(url=f'https://cdn.discordapp.com/emojis/{random_emote_id}.png')
+        embed.set_image(
+            url=f'https://cdn.discordapp.com/emojis/{random_emote_id}.png')
     return embed
 
 
@@ -85,24 +91,28 @@ def randomGuildEmote(guild_id: int) -> Optional[int]:
 
 async def processPostRequest(request):
     alg, sign = request['X-Hub-Signature'].split('=')
-    xHub = hmac.new(keys['SECRET'].encode(), request['bytes'], alg).hexdigest() # recompute hash to validate notification
+    # recompute hash to validate notification
+    xHub = hmac.new(keys['SECRET'].encode(), request['bytes'], alg).hexdigest()
     if xHub == sign:
         global streams
         username = request['args']['u']
         notifyID = request['notifyID']
         if not streams.get(username):
             streams[username] = {'live': None, 'notify_messages': []}
-        if streams[username].get('notifyID') == notifyID: # check if same notification ID
+        # check if same notification ID
+        if streams[username].get('notifyID') == notifyID:
             logger.debug(f'duplicate ID {username} - {notifyID}')
             return
         streams[username]['notifyID'] = notifyID
         if not request['json']['data'] and streams[username]['live']:      # went offline
-            logger.debug(f'{username} went offline, ID {streams[username]["notifyID"]}')
+            logger.debug(
+                f'{username} went offline, ID {streams[username]["notifyID"]}')
             streams[username]['live'] = False
             if not streams[username]['notify_messages']:
                 logger.debug(f'no notify_messages {username}')
                 return
-            duration = seconds_convert(time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
+            duration = seconds_convert(
+                time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
             sent_notifications = []
             for message in streams[username]['notify_messages']:
                 try:
@@ -110,7 +120,7 @@ async def processPostRequest(request):
                         content=f"```apache\n[{username}] Stream ended, it lasted {duration}```", embed=None))
                 except discord.errors.NotFound:
                     client.loop.create_task(message.channel.send(
-                            f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
+                        f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
                 except Exception as e:
                     logger.error(e)
                 sent_notifications.append(message)
@@ -118,16 +128,17 @@ async def processPostRequest(request):
                 streams[username]['notify_messages'].remove(message)
             sent_notifications.clear()
         elif request['json']['data'] and not streams[username]['live']:  # went live
-            logger.debug(f'{username} went live, ID {streams[username]["notifyID"]}')
+            logger.debug(
+                f'{username} went live, ID {streams[username]["notifyID"]}')
             streams[username]['live'] = True
             streams[username]['user_data'] = request['json']['data'][0]
             try:
                 streams[username]['user_data']['game'] = \
                     requests.get(f"https://api.twitch.tv/helix/games?id={streams[username]['user_data']['game_id']}",
-                                    headers={
-                                        "Client-ID": keys['CLIENT_ID'], 
-                                        'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'
-                                        }).json()['data'][0]['name']
+                                 headers={
+                                     "Client-ID": keys['CLIENT_ID'],
+                                     'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'
+                                 }).json()['data'][0]['name']
             except:
                 streams[username]['user_data']['game'] = 'nothing xd'
             embed = discordEmbed(streams[username]['user_data'])
@@ -137,9 +148,9 @@ async def processPostRequest(request):
                 if not channel:
                     continue
                 message = await client.loop.create_task(channel.send(
-                        f'@everyone https://www.twitch.tv/{username} is live '
-                        f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                        embed=embed))
+                    f'@everyone https://www.twitch.tv/{username} is live '
+                    f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                    embed=embed))
                 streams[username]['notify_messages'].append(message)
         return True
     return

@@ -1,7 +1,7 @@
-import time
 import asyncio
 from math import floor
 from datetime import datetime
+from typing import Callable
 
 import requests
 
@@ -9,19 +9,20 @@ import src.db as db
 from .log import logger
 from .config import keys
 
-def exponentBackoff(func):
+
+def exponentBackoff(func: Callable) -> Callable:
     async def wrapper(*args, **kwargs):
         for exponent in range(1, 6):
             try:
-                if await func(*args, **kwargs):
-                    return
-                raise Exception
+                assert await func(*args, **kwargs)
             except Exception as e:
                 logger.error(e)
                 await asyncio.sleep(5 ** exponent)
+    wrapper.__name__ = func.__name__
     return wrapper
 
-def new_timecode_explicit(days, hours, minutes, seconds, duration):
+
+def new_timecode_explicit(days, hours, minutes, seconds, duration) -> str:
     if duration < 1:
         return f'{floor(duration * 1000)}ms'
     timecode = []
@@ -40,7 +41,8 @@ def seconds_convert(duration):
     duration %= 3600
     minutes = duration // 60
     seconds = duration % 60
-    days, hours, minutes, seconds = [floor(x) for x in [days, hours, minutes, seconds]]
+    days, hours, minutes, seconds = [
+        floor(x) for x in [days, hours, minutes, seconds]]
     return new_timecode_explicit(days, hours, minutes, seconds, init_duration)
 
 
@@ -49,14 +51,14 @@ def convert_utc_to_epoch(utc_time: str) -> float:
     return (utc_time - datetime(1970, 1, 1)).total_seconds()
 
 
-def hex3_to_hex6(hex_color: str):
+def hex3_to_hex6(hex_color: str) -> str:
     hex6 = '#'
     for h in hex_color.lstrip('#'):
         hex6 += f'{h}{h}'
     return hex6
 
 
-def rgb_to_hex(r: int, g: int, b: int):
+def rgb_to_hex(r: int, g: int, b: int) -> str:
     return '#%02x%02x%02x' % (r, g, b)
 
 
@@ -65,19 +67,19 @@ def hex_to_rgb(hex_color: str):
     return tuple(int(hex_color[i: i + 2], 16) for i in (0, 2, 4))
 
 
-def is_mod(message):
+def is_mod(message) -> bool:
     return any(message.author.id == i for i in db.getModlist())
 
 
 async def validateAppAccessToken():
-    response = requests.get('https://id.twitch.tv/oauth2/validate', 
-                                headers={'Authorization': f'OAuth {keys["APP_ACCESS_TOKEN"]}'}).json()
+    response = requests.get('https://id.twitch.tv/oauth2/validate',
+                            headers={'Authorization': f'OAuth {keys["APP_ACCESS_TOKEN"]}'}).json()
     if not keys['CLIENT_ID'] == response.get('client_id'):
         logger.warning('invalid APP_ACCESS_TOKEN, generating a new one')
         response = requests.post(f'https://id.twitch.tv/oauth2/token?'
-                                          f'client_id={keys["CLIENT_ID"]}&'
-                                          f'client_secret={keys["CLIENT_OAUTH"]}&'
-                                          f'grant_type=client_credentials').json()
+                                 f'client_id={keys["CLIENT_ID"]}&'
+                                 f'client_secret={keys["CLIENT_OAUTH"]}&'
+                                 f'grant_type=client_credentials').json()
         keys['APP_ACCESS_TOKEN'] = response['access_token']
         logger.info(f'new APP_ACCESS_TOKEN - {keys["APP_ACCESS_TOKEN"]}')
 
@@ -85,24 +87,24 @@ async def validateAppAccessToken():
 @exponentBackoff
 async def webhookStreamsRequest(username, mode, *, userid=None):
     if userid is None:
-        response = requests.get(f'https://api.twitch.tv/helix/users?login={username}', 
-                                    headers={'Client-ID': keys["CLIENT_ID"], 
-                                                'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'}).json()
+        response = requests.get(f'https://api.twitch.tv/helix/users?login={username}',
+                                headers={'Client-ID': keys["CLIENT_ID"],
+                                         'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'}).json()
         userid = response['data'][0]['id']
         logger.info(f'user id: {userid}')
         db.addNotifyUserID(username, userid)
     await validateAppAccessToken()
-    r = requests.post('https://api.twitch.tv/helix/webhooks/hub', 
-                        headers={'Client-ID': keys["CLIENT_ID"], 
-                                    'Authorization': f'Bearer {keys["APP_ACCESS_TOKEN"]}'
-                                }, 
-                        data={
-                            'hub.callback': f'{keys["CALLBACK_URL"]}?u={username}', 
-                            'hub.mode': mode, 
-                            'hub.topic': f'https://api.twitch.tv/helix/streams?user_id={userid}', 
-                            'hub.lease_seconds': 863000, 
-                            'hub.secret': keys["SECRET"]
-                        })
+    r = requests.post('https://api.twitch.tv/helix/webhooks/hub',
+                      headers={'Client-ID': keys["CLIENT_ID"],
+                               'Authorization': f'Bearer {keys["APP_ACCESS_TOKEN"]}'
+                               },
+                      data={
+                          'hub.callback': f'{keys["CALLBACK_URL"]}?u={username}',
+                          'hub.mode': mode,
+                          'hub.topic': f'https://api.twitch.tv/helix/streams?user_id={userid}',
+                          'hub.lease_seconds': 863000,
+                          'hub.secret': keys["SECRET"]
+                      })
     logger.info(f'webhookStreamsRequest status: {r.status_code}: {r.text}')
     if r.content:
         logger.warning(f'r.content in webhookStreamsRequest:\n{r.content}')

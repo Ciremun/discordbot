@@ -15,7 +15,9 @@ commands = {}
 hex_color_regex = re.compile(r'^#([A-Fa-f0-9]{6})$')
 hex3_color_regex = re.compile(r'^#([A-Fa-f0-9]{3})$')
 rgb_regex = re.compile(r'^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
-rgb_hex_regex = re.compile(r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
+rgb_hex_regex = re.compile(
+    r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^(?:(?:^|,?\s*)([01]?\d\d?|2[0-4]\d|25[0-5])){3}$')
+
 
 def bot_command(*, name, check_func=None):
     def decorator(func):
@@ -53,7 +55,8 @@ async def mute_command(message):
             member = target
         else:
             try:
-                member = discord.utils.get(message.guild.members, id=int(target))
+                member = discord.utils.get(
+                    message.guild.members, id=int(target))
                 if not member:
                     await message.channel.send(f'{message.author.mention}, userID [{target}] not found')
                     continue
@@ -223,7 +226,8 @@ async def color_command(message):
 
 @bot_command(name="colors")
 async def colors_command(message):
-    colors_list = [role.mention for role in message.guild.roles if re.match(hex_color_regex, role.name)]
+    colors_list = [role.mention for role in message.guild.roles if re.match(
+        hex_color_regex, role.name)]
     if not colors_list:
         await message.channel.send(f'{message.author.mention}, no colors available')
         return
@@ -249,19 +253,22 @@ async def notify_command(message):
         data = db.getNotifyChannelsByName(twitch_login)
         if not data:
             db.addNotify(twitch_login, notifyChannelIDsStr)
-            client.loop.create_task(webhookStreamsRequest(twitch_login, 'subscribe'))
+            client.loop.create_task(
+                webhookStreamsRequest(twitch_login, 'subscribe'))
             await message.channel.send(
                 f'{message.author.mention}, added {twitch_login} - {notifyChannelIDsStr} channels to notify')
             return
         channels, userid = data[0]
         if channels:
-            if notifyChannelIDsStr.strip() !=  channels.strip():
-                db.updateNotifyChannels(twitch_login, channels, notifyChannelIDsStr, userid=userid)
+            if notifyChannelIDsStr.strip() != channels.strip():
+                db.updateNotifyChannels(
+                    twitch_login, channels, notifyChannelIDsStr, userid=userid)
                 await message.channel.send(f'{message.author.mention}, updated {twitch_login} channels to '
                                            f'{notifyChannelIDsStr}')
                 return
             db.removeNotify(twitch_login, notifyChannelIDsStr, userid=userid)
-            client.loop.create_task(webhookStreamsRequest(twitch_login, 'unsubscribe', userid=userid))
+            client.loop.create_task(webhookStreamsRequest(
+                twitch_login, 'unsubscribe', userid=userid))
             await message.channel.send(
                 f'{message.author.mention}, removed {twitch_login} - {notifyChannelIDsStr} channels from notify')
     except ValueError:

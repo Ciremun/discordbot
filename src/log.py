@@ -22,13 +22,16 @@ fileHandler = RotatingFileHandler(
 fileHandler.setFormatter(fileHandlerFormatter)
 logger.addHandler(fileHandler)
 
+
 def printLogException(etype, value, tb):
     formatted_exception = ' '.join(
         traceback.format_exception(etype, value, tb))
     logger.critical(f"Uncaught exception: {formatted_exception}")
 
+
 def threadingExceptionHandler(e: ExceptHookArgs):
     printLogException(e.exc_type, e.exc_value, e.exc_traceback)
+
 
 sys.excepthook = printLogException
 threading.excepthook = threadingExceptionHandler

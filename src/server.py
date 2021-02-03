@@ -12,6 +12,7 @@ from .log import logger
 app = Flask(__name__)
 hub_challenge_regex = r'hub\.challenge=([a-zA-Z\d\-_]+)&'
 
+
 def run():
     wsgi = WSGIServer(('0.0.0.0', int(os.environ.get('PORT'))), app)
     logger.info('run server')
@@ -22,7 +23,8 @@ def run():
 def result():
     if request.method == 'GET':
         if request.query_string:
-            echo = re.search(hub_challenge_regex, request.query_string.decode('utf-8'))
+            echo = re.search(hub_challenge_regex,
+                             request.query_string.decode('utf-8'))
             if echo:
                 return echo.group(1), 200
     elif request.headers.get('X-Hub-Signature'):
@@ -34,6 +36,7 @@ def result():
             'notifyID': request.headers['Twitch-Notification-Id']
         }), client.loop)
     return Response(status=200)
+
 
 serverThread = Thread(target=run)
 serverThread.start()

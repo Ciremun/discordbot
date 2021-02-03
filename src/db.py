@@ -7,14 +7,19 @@ import psycopg2
 conn = None
 cursor = None
 
+
 def db_connect():
     global conn, cursor
+    if conn is not None:
+        conn.close()
     conn = psycopg2.connect(os.environ.get('DATABASE_URL'), sslmode='require')
     conn.autocommit = True
     cursor = conn.cursor()
 
+
 def db(func: Callable) -> Callable:
     lock = threading.Lock()
+
     def wrapper(*args, **kwargs) -> Any:
         try:
             lock.acquire(True)
@@ -27,6 +32,8 @@ def db(func: Callable) -> Callable:
     wrapper.__name__ = func.__name__
     return wrapper
 
+
+@db
 def db_init():
 
     tables = [
@@ -43,7 +50,7 @@ def db_init():
         cursor.execute('SELECT 1 FROM modlist')
         if not cursor.fetchone():
             cursor.execute('INSERT INTO modlist (user_id) VALUES (%s)',
-                        (int(default_moderator_id),))
+                           (int(default_moderator_id),))
 
 
 def get_streams():
@@ -125,6 +132,7 @@ def getNotifyChannelsByName(username: str):
     cursor.execute(
         'SELECT channels, userid FROM notify WHERE username = %s', (username,))
     return cursor.fetchall()
+
 
 db_connect()
 db_init()
