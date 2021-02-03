@@ -84,13 +84,12 @@ async def validateAppAccessToken():
 
 @exponentBackoff
 async def webhookStreamsRequest(username, mode, *, userid=None):
-    print('webhookStreamsRequest')
     if userid is None:
         response = requests.get(f'https://api.twitch.tv/helix/users?login={username}', 
                                     headers={'Client-ID': keys["CLIENT_ID"], 
                                                 'Authorization': f'Bearer {keys["CLIENT_OAUTH"]}'}).json()
         userid = response['data'][0]['id']
-        print(f'user id: {userid}')
+        logger.info(f'user id: {userid}')
         db.addNotifyUserID(username, userid)
     await validateAppAccessToken()
     r = requests.post('https://api.twitch.tv/helix/webhooks/hub', 
@@ -104,7 +103,7 @@ async def webhookStreamsRequest(username, mode, *, userid=None):
                             'hub.lease_seconds': 863000, 
                             'hub.secret': keys["SECRET"]
                         })
-    print(f'webhookStreamsRequest status: {r.status_code}: {r.text}')
+    logger.info(f'webhookStreamsRequest status: {r.status_code}: {r.text}')
     if r.content:
         logger.warning(f'r.content in webhookStreamsRequest:\n{r.content}')
         return

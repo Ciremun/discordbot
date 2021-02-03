@@ -18,7 +18,7 @@ if cfg['notify']:
 
 @client.event
 async def on_ready(*args, **kwargs):
-    print('bot ready')
+    logger.info('bot ready')
 
 @client.event
 async def on_message(message):

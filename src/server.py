@@ -7,13 +7,14 @@ from gevent.pywsgi import WSGIServer
 from flask import Flask, request, Response
 
 from .client import client, processPostRequest
+from .log import logger
 
 app = Flask(__name__)
 hub_challenge_regex = r'hub\.challenge=([a-zA-Z\d\-_]+)&'
 
 def run():
     wsgi = WSGIServer(('0.0.0.0', int(os.environ.get('PORT'))), app)
-    print('run server')
+    logger.info('run server')
     wsgi.serve_forever()
 
 
