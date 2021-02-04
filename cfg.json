@@ -1,8 +1,0 @@
-{
-    "prefix": "!",
-    "rolesLimit": 100,
-    "notify": true,
-    "FlaskAppPort": 80,
-    "embedHex6": "#6441a5",
-    "footerText": "ayaya"
-}

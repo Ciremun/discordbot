@@ -24,7 +24,7 @@ configure twitch live notifications in discord announcement channels
 |`PORT`                | `int`  | flask application port                                                                       |
 |`DEFAULT_MODERATOR_ID`| `int`  | default bot moderator                                                                        |
 
-### cfg.json
+### src/config.py
 
 |     Key      |  Type  |                         Value                              |
 |--------------|--------|------------------------------------------------------------|
