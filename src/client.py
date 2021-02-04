@@ -131,6 +131,7 @@ async def processPostRequest(request):
             for message in sent_notifications:
                 streams[username]['notify_messages'].remove(message)
             sent_notifications.clear()
+            del streams[username]
         elif request['json']['data'] and not streams[username]['live']:  # went live
             logger.debug(
                 f'{username} went live, ID {streams[username]["notifyID"]}')
