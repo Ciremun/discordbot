@@ -131,6 +131,7 @@ async def processPostRequest(request):
                 streams[username]['notify_messages'].remove(message)
             sent_notifications.clear()
             del streams[username]
+            db.update_streams_state(streams)
         elif request['json']['data'] and not streams[username]['live']:  # went live
             streams[username]['notifyID'] = notifyID
             logger.debug(
