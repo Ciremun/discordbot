@@ -114,7 +114,6 @@ async def processPostRequest(request):
                 return
             duration = seconds_convert(
                 time.time() - convert_utc_to_epoch(streams[username]['user_data']['started_at']))
-            sent_notifications = []
             for message in streams[username]['notify_messages']:
                 try:
                     channel = client.get_channel(message['channel'])
@@ -126,12 +125,7 @@ async def processPostRequest(request):
                         f"```apache\n[{username}] Stream ended, it lasted {duration}```"))
                 except Exception as e:
                     logger.error(e)
-                sent_notifications.append(message)
-            for message in sent_notifications:
-                streams[username]['notify_messages'].remove(message)
-            sent_notifications.clear()
-            streams[username]['notify_messages'].clear()
-            streams[username]['notifyID'] = None
+            del streams[username]
             db.update_streams_state(streams)
         elif request['json']['data'] and not streams[username]['live']:  # went live
             streams[username]['notifyID'] = notifyID
