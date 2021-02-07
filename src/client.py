@@ -104,7 +104,6 @@ async def processPostRequest(request):
             logger.debug(f'duplicate ID {username} - {notifyID}')
             db.update_streams_state(streams)
             return
-        streams[username]['notifyID'] = notifyID
         if not request['json']['data'] and streams[username]['live']:      # went offline
             logger.debug(
                 f'{username} went offline, ID {streams[username]["notifyID"]}')
@@ -133,6 +132,7 @@ async def processPostRequest(request):
             sent_notifications.clear()
             del streams[username]
         elif request['json']['data'] and not streams[username]['live']:  # went live
+            streams[username]['notifyID'] = notifyID
             logger.debug(
                 f'{username} went live, ID {streams[username]["notifyID"]}')
             streams[username]['live'] = True
@@ -157,6 +157,6 @@ async def processPostRequest(request):
                     f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
                     embed=embed))
                 streams[username]['notify_messages'].append({'channel': message.channel.id, 'message': message.id})
-        db.update_streams_state(streams)
+            db.update_streams_state(streams)
         return True
     return
