@@ -101,9 +101,9 @@ async def info_command(message):
                 response += f'[{user.name}#{user.discriminator}]\n'
     response += '\n'
     if len(response) > 2000:
-        response = ""
+        response = "error: info message is too big"
     await message.channel.send(
-        f"""```css\n[uptime: {seconds_convert(time.time() - start_time)}]{response}```""")
+        f"""```glsl\n[uptime: {seconds_convert(time.time() - start_time)}]{response}```""")
 
 
 @bot_command(name="channel", check_func=is_mod)
