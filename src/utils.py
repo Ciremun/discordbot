@@ -76,10 +76,8 @@ def is_mod(message) -> bool:
 async def validateAppAccessToken():
     response = requests.get('https://id.twitch.tv/oauth2/validate',
                             headers={'Authorization': f'OAuth {keys["APP_ACCESS_TOKEN"]}'}).json()
-    response_client_id = response.get('client_id')
-    if not keys['CLIENT_ID'] == response_client_id:
+    if keys['CLIENT_ID'] != response.get('client_id'):
         logger.warning('invalid APP_ACCESS_TOKEN, generating a new one')
-        keys['CLIENT_ID'] = response_client_id
         response = requests.post(f'https://id.twitch.tv/oauth2/token?'
                                  f'client_id={keys["CLIENT_ID"]}&'
                                  f'client_secret={keys["CLIENT_SECRET"]}&'
