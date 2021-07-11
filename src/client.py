@@ -127,7 +127,7 @@ async def processPostRequest(request):
                     logger.error(e)
             del streams[username]
             db.update_streams_state(streams)
-        elif request['json']['data'] and not streams[username]['live']:  # went live
+        elif request['json']['data']:  # went live / update
             streams[username]['notifyID'] = notifyID
             logger.debug(
                 f'{username} went live, ID {streams[username]["notifyID"]}')
@@ -143,16 +143,30 @@ async def processPostRequest(request):
             except:
                 streams[username]['user_data']['game'] = 'nothing xd'
             embed = discordEmbed(streams[username]['user_data'])
-            channels = db.get_streams()[username]['channels']
-            for channel in channels:
-                channel = client.get_channel(channel)
-                if not channel:
-                    continue
-                message = await client.loop.create_task(channel.send(
-                    f'@everyone https://www.twitch.tv/{username} is live '
-                    f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
-                    embed=embed))
-                streams[username]['notify_messages'].append({'channel': message.channel.id, 'message': message.id})
+            if streams[username]['live']:
+                for message in streams[username]['notify_messages']:
+                    try:
+                        channel = client.get_channel(message['channel'])
+                        message = await channel.fetch_message(message['message'])
+                        await client.loop.create_task(message.edit(
+                            content=message.content, embed=embed))
+                    except discord.errors.NotFound:
+                        client.loop.create_task(message.channel.send(
+                            message.content, embed=embed))
+                    except Exception as e:
+                        logger.error(e)
+            else:
+                channels = db.get_streams()[username]['channels']
+                for channel in channels:
+                    channel = client.get_channel(channel)
+                    if not channel:
+                        continue
+                    message = await client.loop.create_task(channel.send(
+                        f'@everyone https://www.twitch.tv/{username} is live '
+                        f'{random.choice(["pog", "poggers", "pogchamp", "poggies"])}',
+                        embed=embed))
+                    streams[username]['notify_messages'].append(
+                        {'channel': message.channel.id, 'message': message.id})
             db.update_streams_state(streams)
         return True
     return
