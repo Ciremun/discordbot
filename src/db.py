@@ -107,6 +107,11 @@ def addNotify(username: str, channels: str):
 
 
 @db
+def add_mod(user_id: int):
+    cursor.execute('INSERT INTO modlist (user_id) VALUES (%s)', (user_id,))
+
+
+@db
 def removeNotify(username: str, channels: str, userid=None):
     if userid is None:
         cursor.execute(

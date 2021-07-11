@@ -280,3 +280,10 @@ async def notify_command(message):
 @bot_command(name="exit", check_func=is_mod)
 async def exit_command(message):
     _exit(0)
+
+@bot_command(name="mod", check_func=is_mod)
+async def mod_command(message):
+    user_id: str = message.content.split(' ')[1]
+    if not user_id.isdigit():
+        await message.channel.send(f'{message.author.mention}, error converting {user_id} to int')
+    db.add_mod(int(user_id))
