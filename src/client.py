@@ -131,7 +131,6 @@ async def processPostRequest(request):
             streams[username]['notifyID'] = notifyID
             logger.debug(
                 f'{username} went live, ID {streams[username]["notifyID"]}')
-            streams[username]['live'] = True
             streams[username]['user_data'] = request['json']['data'][0]
             try:
                 streams[username]['user_data']['game'] = \
@@ -143,7 +142,7 @@ async def processPostRequest(request):
             except:
                 streams[username]['user_data']['game'] = 'nothing xd'
             embed = discordEmbed(streams[username]['user_data'])
-            if streams[username]['live']:
+            if streams[username].get('live'):
                 for message in streams[username]['notify_messages']:
                     try:
                         channel = client.get_channel(message['channel'])
@@ -156,6 +155,7 @@ async def processPostRequest(request):
                     except Exception as e:
                         logger.error(e)
             else:
+                streams[username]['live'] = True
                 channels = db.get_streams()[username]['channels']
                 for channel in channels:
                     channel = client.get_channel(channel)
